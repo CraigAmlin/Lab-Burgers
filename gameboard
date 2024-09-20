@@ -1,0 +1,70 @@
+
+import java.util.Scanner;
+
+public class game {
+    public static void main(String[] args) {
+        char[][] board = initializeBoard(7, 7);
+       int playerRow = 0; // Initial player position row
+       int playerCol = 0; // Initial player position column
+
+        Scanner scanner = new Scanner(System.in);
+
+       while (true) {
+           displayBoard(board, playerRow, playerCol);
+
+            // Get user input
+            System.out.print("Enter your move (W/A/S/D or Q to quit): ");
+            char move = scanner.next().toUpperCase().charAt(0);
+
+            if (move == 'Q') {
+                System.out.println("Turn is done");
+                break;
+            }
+
+            // Update player position based on the user's input
+            int newRow = playerRow;
+            int newCol = playerCol;
+
+            if (move == 'W' && playerRow > 0) {
+                newRow--;
+            } else if (move == 'A' && playerCol > 0) {
+                newCol--;
+            } else if (move == 'S' && playerRow < board.length - 1) {
+                newRow++;
+            } else if (move == 'D' && playerCol < board[0].length - 1) {
+                newCol++;
+            }
+
+            // Update the player's position on the board
+            board[playerRow][playerCol] = '.';
+            playerRow = newRow;
+            playerCol = newCol;
+            board[playerRow][playerCol] = 'P';
+        }
+
+        scanner.close();
+    }
+
+    // Initialize the game board with dots and place the player 'P' in the center
+    private static char[][] initializeBoard(int numRows, int numCols) {
+        char[][] board = new char[numRows][numCols];
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numCols; j++) {
+                board[i][j] = '.';
+            }
+        }
+        board[0][0] = 'P';
+        return board;
+    }
+
+    // Display the game board with the player's position
+    private static void displayBoard(char[][] board, int playerRow, int playerCol) {
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                System.out.print(board[i][j] + " ");
+            }
+            System.out.println();
+        }
+
+    }
+}
