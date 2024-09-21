@@ -1,7 +1,7 @@
 
 import java.util.Scanner;
 
-public class game {
+public class gameboard {
     public static void main(String[] args) {
         char[][] board = initializeBoard(7, 7);
        int playerRow = 0; // Initial player position row
