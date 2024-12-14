@@ -1,18 +1,19 @@
 public class Tile{
 
     public char type;
-    private int rotation, treasure;
-    private boolean[] connection = new boolean [4];
-    //private String imageName;
+    public int rotation, treasure;
+    public boolean[] connection = new boolean [4];
+    private String imageName;
 
     //Tile creation function
     //char typ assigns tile Type, must be 'i','l', or 't'
     //char rot assigns tile Rotation, must be 0, 90, 180, or 270
     //int trs assigns treasure ID, assign ID 0 for no treasure, 1-4 for player starting positions, 5-28 for card treasures
-    public Tile(char typ,int rot, int trs){        
+    public Tile(char typ,int rot, int trs, String nam){        
         type = typ;
         rotation = rot;
         treasure = trs;
+        imageName = nam;
         this.updateTile();
     }
 
@@ -101,5 +102,13 @@ public class Tile{
     //return treasure ID
     public int getTreasure(){
         return treasure;
+    }
+
+    //return treasure ID
+    public String getImage(){
+        String out = imageName + rotation + ".jpg";
+        if(type == 'i' && rotation > 90)
+            out = imageName + (rotation - 180) + ".jpg";
+        return out;
     }
 }

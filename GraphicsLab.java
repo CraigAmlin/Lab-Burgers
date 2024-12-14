@@ -2,15 +2,29 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.awt.image.AffineTransformOp;
-import java.awt.image.ImageObserver;
 import java.io.File;
 import java.io.IOException;
+
+/* 
+import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
+import java.awt.image.AffineTransformOp;
+import java.awt.image.ImageObserver;
+*/
 
+/*
+Get basic random AI working
+Get AI to recognize board navigation and move to targeted squares
+Add toggle to set a player to computer controlled
 
+DONE:
+Add turn system inside interaction loop
+Implemented no return tile rule
+Altered multiple functions to use Switch statments instead of nested if/else
+Added ImageName component to Tile class, reducing costly AssignTiles calls
+Altered Arrows to call shared functions, reducing duplicate code
+*/
 
 public class GraphicsLab extends labyDriver {
     //Main frame the player can see and holds everything
@@ -45,13 +59,13 @@ public class GraphicsLab extends labyDriver {
     public static JButton Arrow7Button, Arrow8Button, Arrow9Button;
     public static JButton Arrow10Button, Arrow11Button, Arrow12Button;
 
-     //Player
+    //Player
     public static JPanel playerB, PlayerY, PlayerG, PlayerR;
 
     public static BufferedImage BlueWiz, YellowWiz, GreenWiz, RedWiz;
 
     //Player layer
-    public static JFrame Player, Player2, Player3, Player4;
+    public static JFrame Player1, Player2, Player3, Player4;
 
     public static JPanel T1, T2, T3, T4;
 
@@ -61,7 +75,26 @@ public class GraphicsLab extends labyDriver {
     //Variables used to adjust what tile's height and length will be
     private int X=75,Y=75;
 
-   private static int pX, pY;
+    //Variable to track current turn
+    //1, 2, 3, 4 indicate player X's turn to move tiles
+    //5, 6, 7, 8 indicate player (X-4)'s turn to move character
+    //Turn order is Red (1,5), Blue (2,6), Green (3,7), Yellow (4,8)
+    private int turn = 1;
+
+    //Variables to track player's computer controlled status/cpu level
+    //0 indicated manual player control (no com)
+    //1 indicates random cpu, 2 easy, and 3 hard (if I get that far)
+    private int com1 = 0;
+    private int com2 = 0;
+    private int com3 = 0;
+    private int com4 = 0;
+
+    //Variable to track where the last tile came from (to disallow immediate replacement)
+    private int lastTile = 0;
+    private int lastDir = 0;
+    
+
+    private static int pX, pY;
     //Class called GraphicsLab which will contain all the important code
     //and logic for displaying images,tiles, and text
     public GraphicsLab() {
@@ -78,12 +111,12 @@ public class GraphicsLab extends labyDriver {
 
         //Code for the images
         //Calling a function that assigns all the tiles what image they should be
-        //Loop makes it work and not return null / error
-        //Delete later
+        //Initializing loop avoids null pointer error
         int i = 1;
         for(i=1;i<=50;i++) {
-            TileGraphics(i, "TestFrog.jpg");
+            TileGraphics(i, "Tile_I_0.jpg");
         }
+        
 
         //Code for setting bounds of tiles and inserting them
         //(position X, position Y,Image length X, image length Y)
@@ -155,7 +188,7 @@ public class GraphicsLab extends labyDriver {
             public void actionPerformed(ActionEvent e) {
                 board.rotR();
                 try {
-                    Img50 = ImageIO.read(new File(AssignTile(board.getTreasure(49), board.getType(49), board.getRotation(49))));
+                    Img50 = ImageIO.read(new File(board.getImage(49)));
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -167,7 +200,7 @@ public class GraphicsLab extends labyDriver {
             public void actionPerformed(ActionEvent e) {
                 board.rotL();
                 try {
-                    Img50 = ImageIO.read(new File(AssignTile(board.getTreasure(49), board.getType(49), board.getRotation(49))));
+                    Img50 = ImageIO.read(new File(board.getImage(49)));
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -242,7 +275,7 @@ public class GraphicsLab extends labyDriver {
         //Adding the rotating tile to the screen
         frame.add(TileMain);
 
-//Keeps play layer above board layer
+        //Keeps play layer above board layer
         frame.setFocusableWindowState(false);
 
         //Setting the frame visible and everything inside of it
@@ -255,424 +288,192 @@ public class GraphicsLab extends labyDriver {
     //Creates and runs everything, mostly for figuring out what works and what doesnt
     public static void main(String[] args) {
         new GraphicsLab();
-
     }
 
     //Will take the ID and Type from craig's tile class
     //And give it a string which can be used in the Tile Graphics function
-    String AssignTile(int ID, char Type, int rot)
-    {System.getProperty("user.dir");
-        // rot = board.getRotation();
+    String AssignTile(int ID, char Type, int rot) {
+        System.getProperty("user.dir");
         String TileFname = "";
-        if(ID == 1)
-        {
-            TileFname = "Tile_L_Red_0.jpg";
-        }
-        else if (ID == 2)
-        {
-            TileFname = "Tile_L_Blue_0.jpg";
-        }
-        else if (ID == 3)
-        {
-            TileFname = "Tile_L_Yellow.jpg";
-        }
-        else if (ID == 4)
-        {
-            TileFname = "Tile_L_Green_0.jpg";
-        }
-        else if (ID == 5)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Skull_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Skull_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Skull_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Skull_270.jpg";
-            }
-        }
-        else if (ID == 6)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Sword_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Sword_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Sword_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Sword_270.jpg";
-            }
-        }
-        else if (ID == 7)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Coins_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Coins_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Coins_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Coins_270.jpg";
-            }
-        }
-        else if (ID == 8)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Keys_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Keys_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Keys_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Keys_270.jpg";
-            }
-        }
-        else if (ID == 9)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Emerald_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Emerald_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Emerald_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Emerald_270.jpg";
-            }
-        }
-        else if (ID == 10)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Knight_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Knight_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Knight_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Knight_270.jpg";
-            }
-        }
-        else if (ID == 11)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Book_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Book_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Book_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Book_270.jpg";
-            }
-        }
-        else if (ID == 12)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Crown_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Crown_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Crown_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Crown_270.jpg";
-            }
-        }
-        else if (ID == 13)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Chest_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Chest_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Chest_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Chest_270.jpg";
-            }
-        }
-        else if (ID == 14)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Candleabra_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Candleabra_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Candleabra_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Candleabra_270.jpg";
-            }
-        }
-        else if (ID == 15)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Map_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Map_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Map_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Map_270.jpg";
-            }
-        }
-        else if (ID == 16)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Ring_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Ring_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Ring_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Ring_270.jpg";
-            }
-        }
-        else if (ID == 17)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_L_Spider_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_L_Spider_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_L_Spider_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_L_Spider_270.jpg";
-            }
-        }
-        else if (ID == 18)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_L_Mouse_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_L_Mouse_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_L_Mouse_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_L_Mouse_270.jpg";
-            }
-        }
-        else if (ID == 19)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_L_Moth_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_L_Moth_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_L_Moth_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_L_Moth_270.jpg";
-            }
-        }
-        else if (ID == 20)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_L_Beetle_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_L_Beetle_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_L_Beetle_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_L_Beetle_270.jpg";
-            }
-
-        }
-        else if (ID == 21)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_L_Lizard_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_L_Lizard_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_L_Lizard_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_L_Lizard_270.jpg";
-            }
-        }
-        else if (ID == 22)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_L_Owl_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_L_Owl_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_L_Owl_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_L_Owl_270.jpg";
-            }
-        }
-        else if (ID == 23)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Bat_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Bat_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Bat_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Bat_270.jpg";
-            }
-        }
-        else if (ID == 24)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Troll_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Troll_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Troll_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Troll_270.jpg";
-            }
-        }
-        else if (ID == 25)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Ghost_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Ghost_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Ghost_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Ghost_270.jpg";
-            }
-        }
-        else if (ID == 26)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Genie_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Genie_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Genie_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Genie_270.jpg";
-            }
-        }
-        else if (ID == 27)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Lady_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Lady_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Lady_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Lady_270.jpg";
-            }
-        }
-        else if (ID == 28)
-        {
-            if(rot == 0) {
-                TileFname = "Tile_T_Dragon_0.jpg";
-            }
-            if(rot == 90) {
-                TileFname = "Tile_T_Dragon_90.jpg";
-            }
-            if(rot == 180) {
-                TileFname = "Tile_T_Dragon_180.jpg";
-            }
-            if(rot == 270) {
-                TileFname = "Tile_T_Dragon_270.jpg";
-            }
-        }
-        else if(ID == 0)
-        {
-            if(Type == 'l')
-            {
-                if(rot == 0)
-                    TileFname = "Tile_L_0.jpg";
-                if(rot == 90)
-                    TileFname = "Tile_L_90.jpg";
-                if(rot == 180)
-                    TileFname = "Tile_L_180.jpg";
-                if(rot == 270)
-                    TileFname = "Tile_L_270.jpg";
-            }
-            else
-            {
-                if(rot == 0 || rot == 180)
-                    TileFname = "Tile_I_0.jpg";
+        switch(ID){
+            case 1: TileFname = "Tile_L_Red_0.jpg";
+                break;
+            case 2: TileFname = "Tile_L_Blue_0.jpg";
+                break;
+            case 3: TileFname = "Tile_L_Yellow_0.jpg";
+                break;
+            case 4: TileFname = "Tile_L_Green_0.jpg";
+                break;
+            case 5: 
+                if(rot == 0) TileFname = "Tile_T_Skull_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Skull_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Skull_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Skull_270.jpg";
+                break;
+            case 6: 
+                if(rot == 0) TileFname = "Tile_T_Sword_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Sword_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Sword_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Sword_270.jpg";
+                break;
+            case 7:
+                if(rot == 0) TileFname = "Tile_T_Coins_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Coins_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Coins_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Coins_270.jpg";
+                break;
+            case 8: 
+                if(rot == 0) TileFname = "Tile_T_Keys_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Keys_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Keys_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Keys_270.jpg";
+                break;
+            case 9: 
+                if(rot == 0) TileFname = "Tile_T_Emerald_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Emerald_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Emerald_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Emerald_270.jpg";
+                break;
+            case 10: 
+                if(rot == 0) TileFname = "Tile_T_Knight_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Knight_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Knight_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Knight_270.jpg";
+                break;
+            case 11:
+                if(rot == 0) TileFname = "Tile_T_Book_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Book_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Book_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Book_270.jpg";
+                break;
+            case 12:
+                if(rot == 0) TileFname = "Tile_T_Crown_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Crown_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Crown_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Crown_270.jpg";
+                break;
+            case 13:
+                if(rot == 0) TileFname = "Tile_T_Chest_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Chest_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Chest_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Chest_270.jpg";
+                break;
+            case 14:
+                if(rot == 0) TileFname = "Tile_T_Candleabra_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Candleabra_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Candleabra_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Candleabra_270.jpg";
+                break;
+            case 15:
+                if(rot == 0) TileFname = "Tile_T_Map_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Map_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Map_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Map_270.jpg";
+                break;
+            case 16:
+                if(rot == 0) TileFname = "Tile_T_Ring_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Ring_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Ring_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Ring_270.jpg";
+                break;
+            case 17:
+                if(rot == 0) TileFname = "Tile_L_Spider_0.jpg";
+                if(rot == 90) TileFname = "Tile_L_Spider_90.jpg";
+                if(rot == 180) TileFname = "Tile_L_Spider_180.jpg";
+                if(rot == 270) TileFname = "Tile_L_Spider_270.jpg";
+                break;
+            case 18:
+                if(rot == 0) TileFname = "Tile_L_Mouse_0.jpg";
+                if(rot == 90) TileFname = "Tile_L_Mouse_90.jpg";
+                if(rot == 180) TileFname = "Tile_L_Mouse_180.jpg";
+                if(rot == 270) TileFname = "Tile_L_Mouse_270.jpg";
+                break;
+            case 19:
+                if(rot == 0) TileFname = "Tile_L_Moth_0.jpg";
+                if(rot == 90) TileFname = "Tile_L_Moth_90.jpg";
+                if(rot == 180) TileFname = "Tile_L_Moth_180.jpg";
+                if(rot == 270) TileFname = "Tile_L_Moth_270.jpg";
+                break;
+            case 20:
+                if(rot == 0) TileFname = "Tile_L_Beetle_0.jpg";
+                if(rot == 90) TileFname = "Tile_L_Beetle_90.jpg";
+                if(rot == 180) TileFname = "Tile_L_Beetle_180.jpg";
+                if(rot == 270) TileFname = "Tile_L_Beetle_270.jpg";
+                break;
+            case 21:
+                if(rot == 0) TileFname = "Tile_L_Lizard_0.jpg";
+                if(rot == 90) TileFname = "Tile_L_Lizard_90.jpg";
+                if(rot == 180) TileFname = "Tile_L_Lizard_180.jpg";
+                if(rot == 270) TileFname = "Tile_L_Lizard_270.jpg";
+                break;
+            case 22:
+                if(rot == 0) TileFname = "Tile_L_Owl_0.jpg";
+                if(rot == 90) TileFname = "Tile_L_Owl_90.jpg";
+                if(rot == 180) TileFname = "Tile_L_Owl_180.jpg";
+                if(rot == 270) TileFname = "Tile_L_Owl_270.jpg";
+                break;
+            case 23:
+                if(rot == 0) TileFname = "Tile_T_Bat_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Bat_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Bat_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Bat_270.jpg";
+                break;
+            case 24:
+                if(rot == 0) TileFname = "Tile_T_Troll_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Troll_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Troll_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Troll_270.jpg";
+                break;
+            case 25:
+                if(rot == 0) TileFname = "Tile_T_Ghost_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Ghost_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Ghost_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Ghost_270.jpg";
+                break;
+            case 26:
+                if(rot == 0) TileFname = "Tile_T_Genie_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Genie_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Genie_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Genie_270.jpg";
+                break;
+            case 27:
+                if(rot == 0) TileFname = "Tile_T_Lady_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Lady_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Lady_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Lady_270.jpg";
+                break;
+            case 28:
+                if(rot == 0) TileFname = "Tile_T_Dragon_0.jpg";
+                if(rot == 90) TileFname = "Tile_T_Dragon_90.jpg";
+                if(rot == 180) TileFname = "Tile_T_Dragon_180.jpg";
+                if(rot == 270) TileFname = "Tile_T_Dragon_270.jpg";
+                break;
+            default:
+                if(Type == 'l')
+                {
+                    if(rot == 0) TileFname = "Tile_L_0.jpg";
+                    if(rot == 90) TileFname = "Tile_L_90.jpg";
+                    if(rot == 180) TileFname = "Tile_L_180.jpg";
+                    if(rot == 270) TileFname = "Tile_L_270.jpg";
+                }
                 else
-                    TileFname = "Tile_I_90.jpg";
+                {
+                    if(rot == 0 || rot == 180) TileFname = "Tile_I_0.jpg";
+                    else TileFname = "Tile_I_90.jpg";
+                }
+                break;
             }
-        }
         return TileFname;
     }
 
     //Function that goes through the tiles and assigns them what image they are
     //It will get sent which tiles are being changed and what the file name should be
     //Must be called 50 times before anything else graphically happens
-    void TileGraphics(int x, String Fname)
-    {
-
-        //To get which tile is being called we use an if else statement
-        if(x == 1) {
+    void TileGraphics(int x, String Fname){
+        //To get which tile is being called we use a switch statement
+        switch(x){
+        //Tile 1 Panel created and then image is painted in it
+        case 1: 
             Tile1 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -686,11 +487,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-
-        }
+            break;
         //Tile 2 Panel created and then image is painted in it
-        if(x == 2) {
+        case 2: 
             Tile2 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -704,9 +503,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-//Tile 3 Panel created and then image is painted in it
-        if(x == 3) {
+            break;
+        //Tile 3 Panel created and then image is painted in it
+        case 3: 
             Tile3 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -720,9 +519,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-//Tile 4 Panel created and then image is painted in it
-        if(x == 4) {
+            break;
+        //Tile 4 Panel created and then image is painted in it
+        case 4: 
             Tile4 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -736,9 +535,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 5 Panel created and then image is painted in it
-        if(x==5) {
+        case 5: 
             Tile5 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -752,9 +551,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-//Tile 6 Panel created and then image is painted in it
-        if(x==6) {
+            break;
+        //Tile 6 Panel created and then image is painted in it
+        case 6: 
             Tile6 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -768,9 +567,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 7 Panel created and then image is painted in it
-        if(x==7) {
+        case 7: 
             Tile7 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -784,11 +583,11 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-//Row 1 end
-        //Row 2 Start
+            break;
+    //Row 1 end
+    //Row 2 Start
         //Tile 8 Panel created and then image is painted in it
-        if(x==8) {
+        case 8: 
             Tile8 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -801,9 +600,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 9 Panel created and then image is painted in it
-        if(x==9) {
+        case 9: 
             Tile9 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -816,9 +615,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 10 Panel created and then image is painted in it
-        if(x==10) {
+        case 10: 
             Tile10 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -831,9 +630,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 11 Panel created and then image is painted in it
-        if(x==11) {
+        case 11: 
             Tile11 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -846,9 +645,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 12 Panel created and then image is painted in it
-        if(x==12) {
+        case 12: 
             Tile12 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -861,9 +660,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 13 Panel created and then image is painted in it
-        if(x==13) {
+        case 13: 
             Tile13 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -876,9 +675,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 14 Panel created and then image is painted in it
-        if(x==14) {
+        case 14: 
             Tile14 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -891,11 +690,11 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-        //Row 2 end
-        //Row 3 Start
+            break;
+    //Row 2 end
+    //Row 3 Start
         //Tile 15 Panel created and then image is painted in it
-        if(x==15) {
+        case 15: 
             Tile15 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -908,9 +707,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 16 Panel created and then image is painted in it
-        if(x==16) {
+        case 16: 
             Tile16 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -923,9 +722,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 17 Panel created and then image is painted in it
-        if(x==17) {
+        case 17: 
             Tile17 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -938,9 +737,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 18 Panel created and then image is painted in it
-        if(x==18) {
+        case 18: 
             Tile18 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -953,9 +752,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 19 Panel created and then image is painted in it
-        if(x==19) {
+        case 19: 
             Tile19 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -968,9 +767,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 20 Panel created and then image is painted in it
-        if(x==20) {
+        case 20: 
             Tile20 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -983,9 +782,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 21 Panel created and then image is painted in it
-        if(x==21) {
+        case 21: 
             Tile21 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -998,11 +797,11 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-        //End of row 3
-        //Row 4 start
+            break;
+    //End of row 3
+    //Row 4 start
         //Tile 21 Panel created and then image is painted in it
-        if(x==22) {
+        case 22: 
             Tile22 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1015,9 +814,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 23 Panel created and then image is painted in it
-        if(x==23) {
+        case 23: 
             Tile23 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1030,9 +829,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 24 Panel created and then image is painted in it
-        if(x==24) {
+        case 24: 
             Tile24 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1045,9 +844,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 25 Panel created and then image is painted in it
-        if(x==25) {
+        case 25: 
             Tile25 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1060,9 +859,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 26 Panel created and then image is painted in it
-        if(x==26) {
+        case 26: 
             Tile26 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1075,9 +874,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 27 Panel created and then image is painted in it
-        if(x==27) {
+        case 27: 
             Tile27 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1090,9 +889,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 28 Panel created and then image is painted in it
-        if(x==28) {
+        case 28: 
             Tile28 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1105,11 +904,11 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-        //End of row 4
-        //Start of row 5
+            break;
+    //End of row 4
+    //Start of row 5
         //Tile 29 Panel created and then image is painted in it
-        if(x==29) {
+        case 29: 
             Tile29 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1122,9 +921,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 30 Panel created and then image is painted in it
-        if(x==30) {
+        case 30: 
             Tile30 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1137,9 +936,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 31 Panel created and then image is painted in it
-        if(x==31) {
+        case 31: 
             Tile31 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1152,9 +951,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 32 Panel created and then image is painted in it
-        if(x==32) {
+        case 32: 
             Tile32 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1167,9 +966,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 33 Panel created and then image is painted in it
-        if(x==33) {
+        case 33: 
             Tile33 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1182,9 +981,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 34 Panel created and then image is painted in it
-        if(x==34) {
+        case 34: 
             Tile34 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1197,10 +996,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 35 Panel created and then image is painted in it
-        if(x==35)
-        {
+        case 35: 
             Tile35 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1213,11 +1011,11 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-        //End of row 5
-        //Start of row 6
+            break;
+    //End of row 5
+    //Start of row 6
         //Tile 36 Panel created and then image is painted in it
-        if(x==36) {
+        case 36: 
             Tile36 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1230,9 +1028,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 37 Panel created and then image is painted in it
-        if(x==37) {
+        case 37: 
             Tile37 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1245,9 +1043,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 38 Panel created and then image is painted in it
-        if(x==38) {
+        case 38: 
             Tile38 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1260,9 +1058,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 39 Panel created and then image is painted in it
-        if(x==39) {
+        case 39: 
             Tile39 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1275,9 +1073,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 40 Panel created and then image is painted in it
-        if(x==40) {
+        case 40: 
             Tile40 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1290,9 +1088,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 35 Panel created and then image is painted in it
-        if(x==41) {
+        case 41: 
             Tile41 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1305,9 +1103,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 42 Panel created and then image is painted in it
-        if(x==42) {
+        case 42: 
             Tile42 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1320,11 +1118,11 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-        //End of row 6
-        //Start of row 7
-//Tile 43 Panel created and then image is painted in it
-        if(x==43) {
+            break;
+    //End of row 6
+    //Start of row 7
+        //Tile 43 Panel created and then image is painted in it
+        case 43: 
             Tile43 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1337,9 +1135,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 44 Panel created and then image is painted in it
-        if(x==44) {
+        case 44: 
             Tile44 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1352,9 +1150,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 45 Panel created and then image is painted in it
-        if(x==45) {
+        case 45: 
             Tile45 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1367,9 +1165,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 46 Panel created and then image is painted in it
-        if(x==46) {
+        case 46: 
             Tile46 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1382,9 +1180,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 47 Panel created and then image is painted in it
-        if(x==47) {
+        case 47: 
             Tile47 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1397,9 +1195,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 48 Panel created and then image is painted in it
-        if(x==48) {
+        case 48: 
             Tile48 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1412,9 +1210,9 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            break;
         //Tile 49 Panel created and then image is painted in it
-        if(x == 49) {
+        case 49: 
             Tile49 = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1427,10 +1225,11 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-        //End of grid tiles
-        //Rotated Tile
-        if(x==50) {
+            break;
+    //End of row 7
+    //End of grid tiles
+        //Spare Tile
+        case 50: 
             TileMain = new JPanel() {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -1443,12 +1242,12 @@ public class GraphicsLab extends labyDriver {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            break;
         }
     }
 
     //Function that will assign the images of the arrows
     //As of 10/16 this is new and needs to be added to the main code
-
     public void IndicatorsAdd()
     {
         //Three Arrows per side
@@ -1481,555 +1280,285 @@ public class GraphicsLab extends labyDriver {
         Arrow1Button.setBounds(175,0,X,Y);
         Arrow2Button.setBounds(325,0,X,Y);
         Arrow3Button.setBounds(475,0,X,Y);
-//Right arrows, Img called LeftArrows becuase they face left
+        //Right arrows, Img called LeftArrows becuase they face left
         Arrow4Button.setBounds(625,150,X,Y);
         Arrow5Button.setBounds(625,300,X,Y);
         Arrow6Button.setBounds(625,450,X,Y);
         //Arrows on the bottom row
-        Arrow7Button.setBounds(175, 600,X,Y);
+        Arrow7Button.setBounds(475, 600,X,Y);
         Arrow8Button.setBounds(325, 600,X,Y);
-        Arrow9Button.setBounds(475,600,X,Y);
+        Arrow9Button.setBounds(175,600,X,Y);
         //Arrows on the Left
-        Arrow10Button.setBounds(0,150,X,Y);
+        Arrow10Button.setBounds(0,450,X,Y);
         Arrow11Button.setBounds(0,300,X,Y);
-        Arrow12Button.setBounds(0,450,X,Y);
+        Arrow12Button.setBounds(0,150,X,Y);
         //Adding action listeners
 
         Arrow1Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                board.SlideTileDown(1);
-                for(int i = 0; i < 50; i++){
-                    TileGraphics(i+1, AssignTile(board.getTreasure(i), board.getType(i), board.getRotation(i)));
-                }
-                frame.repaint();
-                if(blue.slideDown(1))
-                { Player.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
-                if(yellow.slideDown(1))
-                { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
-                if(green.slideDown(1))
-                { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
-                if(red.slideDown(1))
-                { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+                moveDown(1);
             }
         });
         Arrow2Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                board.SlideTileDown(3);
-                for(int i = 0; i < 50; i++){
-                    TileGraphics(i+1, AssignTile(board.getTreasure(i), board.getType(i), board.getRotation(i)));
-                }
-                if(blue.slideDown(3))
-                { Player.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
-                if(yellow.slideDown(3))
-                { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
-                if(green.slideDown(3))
-                { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
-                if(red.slideDown(3))
-                { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
-                frame.repaint();
+                moveDown(3);
             }
         });
         Arrow3Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                board.SlideTileDown(5);
-                for(int i = 0; i < 50; i++){
-                    TileGraphics(i+1, AssignTile(board.getTreasure(i), board.getType(i), board.getRotation(i)));
-                }
-                if(blue.slideDown(5))
-                { Player.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
-                if(yellow.slideDown(5))
-                { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
-                if(green.slideDown(5))
-                { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
-                if(red.slideDown(5))
-                { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
-                frame.repaint();
+                moveDown(5);
             }
         });
         Arrow4Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                board.SlideTileLeft(1);
-                for(int i = 0; i < 50; i++){
-                    TileGraphics(i+1, AssignTile(board.getTreasure(i), board.getType(i), board.getRotation(i)));
-                }
-                frame.repaint();
-                if(blue.slideLeft(1))
-                { Player.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
-                if(yellow.slideLeft(1))
-                { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
-                if(green.slideLeft(1))
-                { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
-                if(red.slideLeft(1))
-                { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+                moveLeft(1);
             }
         });
         Arrow5Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                board.SlideTileLeft(3);
-                for(int i = 0; i < 50; i++){
-                    TileGraphics(i+1, AssignTile(board.getTreasure(i), board.getType(i), board.getRotation(i)));
-                }
-                frame.repaint();
-                if(blue.slideLeft(3))
-                { Player.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
-                if(yellow.slideLeft(3))
-                { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
-                if(green.slideLeft(3))
-                { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
-                if(red.slideLeft(3))
-                { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+                moveLeft(3);
             }
         });
         Arrow6Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                board.SlideTileLeft(5);
-                for(int i = 0; i < 50; i++){
-                    TileGraphics(i+1, AssignTile(board.getTreasure(i), board.getType(i), board.getRotation(i)));
-
-                }
-                frame.repaint();
-                if(blue.slideLeft(5))
-                { Player.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
-                if(yellow.slideLeft(5))
-                { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
-                if(green.slideLeft(5))
-                { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
-                if(red.slideLeft(5))
-                { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+                moveLeft(5);
             }
 
         });
         Arrow7Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                board.SlideTileUp(1);
-                for(int i = 0; i < 50; i++){
-                    TileGraphics(i+1, AssignTile(board.getTreasure(i), board.getType(i), board.getRotation(i)));
-
-                }
-                frame.repaint();
-                if(blue.slideUp(1))
-                { Player.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
-                if(yellow.slideUp(1))
-                { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
-                if(green.slideUp(1))
-                { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
-                if(red.slideUp(1))
-                { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+                moveUp(5);
             }
         });
         Arrow8Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                board.SlideTileUp(3);
-                for(int i = 0; i < 50; i++){
-                    TileGraphics(i+1, AssignTile(board.getTreasure(i), board.getType(i), board.getRotation(i)));
-
-                }
-                frame.repaint();
-                if(blue.slideUp(3))
-                { Player.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
-                if(yellow.slideUp(3))
-                { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
-                if(green.slideDown(3))
-                { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
-                if(red.slideUp(3))
-                { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+                moveUp(3);
             }
         });
         Arrow9Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                board.SlideTileUp(5);
-                for(int i = 0; i < 50; i++){
-                    TileGraphics(i+1, AssignTile(board.getTreasure(i), board.getType(i), board.getRotation(i)));
-
-                }
-                frame.repaint();
-                if(blue.slideUp(5))
-                { Player.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
-                if(yellow.slideUp(5))
-                { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
-                if(green.slideUp(5))
-                { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
-                if(red.slideUp(5))
-                { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+                moveUp(1);
             }
         });
         Arrow10Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                board.SlideTileRight(1);
-                for(int i = 0; i < 50; i++){
-                    TileGraphics(i+1, AssignTile(board.getTreasure(i), board.getType(i), board.getRotation(i)));
-
-                }
-                frame.repaint();
-                if(blue.slideRight(1))
-                { Player.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
-                if(yellow.slideRight(1))
-                { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
-                if(green.slideRight(1))
-                { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
-                if(red.slideRight(1))
-                { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+                moveRight(5);
             }
         });
         Arrow11Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                board.SlideTileRight(3);
-                for(int i = 0; i < 50; i++){
-                    TileGraphics(i+1, AssignTile(board.getTreasure(i), board.getType(i), board.getRotation(i)));
-
-                }
-                frame.repaint();
-                if(blue.slideRight(3))
-                { Player.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
-                if(yellow.slideRight(3))
-                { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
-                if(green.slideRight(3))
-                { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
-                if(red.slideRight(3))
-                { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+                moveRight(3);
             }
         });
         Arrow12Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                board.SlideTileRight(5);
-                for(int i = 0; i < 50; i++){
-                    TileGraphics(i+1, AssignTile(board.getTreasure(i), board.getType(i), board.getRotation(i)));
-
-                }
-                frame.repaint();
-                if(blue.slideRight(5))
-                { Player.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
-                if(yellow.slideRight(5))
-                { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
-                if(green.slideRight(5))
-                { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
-                if(red.slideRight(5))
-                { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+                moveRight(1);
             }
         });
         //Mouse Listeners now
         Arrow1Button.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                Arrow1Button.setIcon(DB);
-            }
+            public void mouseEntered(MouseEvent e) {Arrow1Button.setIcon(DB);}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                Arrow1Button.setIcon(D);
-            }
+            public void mouseExited(MouseEvent e) {Arrow1Button.setIcon(D);}
         });
         Arrow2Button.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                Arrow2Button.setIcon(DB);
-            }
+            public void mouseEntered(MouseEvent e) {Arrow2Button.setIcon(DB);}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                Arrow2Button.setIcon(D);
-            }
+            public void mouseExited(MouseEvent e) {Arrow2Button.setIcon(D);}
         });
         Arrow3Button.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                Arrow3Button.setIcon(DB);
-            }
+            public void mouseEntered(MouseEvent e) {Arrow3Button.setIcon(DB);}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                Arrow3Button.setIcon(D);
-            }
+            public void mouseExited(MouseEvent e) {Arrow3Button.setIcon(D);}
         });
         Arrow4Button.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                Arrow4Button.setIcon(RB);
-            }
+            public void mouseEntered(MouseEvent e) {Arrow4Button.setIcon(RB);}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                Arrow4Button.setIcon(R);
-            }
+            public void mouseExited(MouseEvent e) {Arrow4Button.setIcon(R);}
         });
         Arrow5Button.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                Arrow5Button.setIcon(RB);
-            }
+            public void mouseEntered(MouseEvent e) {Arrow5Button.setIcon(RB);}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                Arrow5Button.setIcon(R);
-            }
+            public void mouseExited(MouseEvent e) {Arrow5Button.setIcon(R);}
         });
         Arrow6Button.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                Arrow6Button.setIcon(RB);
-            }
+            public void mouseEntered(MouseEvent e) {Arrow6Button.setIcon(RB);}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                Arrow6Button.setIcon(R);
-            }
+            public void mouseExited(MouseEvent e) {Arrow6Button.setIcon(R);}
         });
         Arrow7Button.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                Arrow7Button.setIcon(UB);
-            }
+            public void mouseEntered(MouseEvent e) {Arrow7Button.setIcon(UB); }
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                Arrow7Button.setIcon(U);
-            }
+            public void mouseExited(MouseEvent e) {Arrow7Button.setIcon(U);}
         });
         Arrow8Button.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                Arrow8Button.setIcon(UB);
-            }
+            public void mouseEntered(MouseEvent e) {Arrow8Button.setIcon(UB);}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                Arrow8Button.setIcon(U);
-            }
+            public void mouseExited(MouseEvent e) {Arrow8Button.setIcon(U);}
         });
         Arrow9Button.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                Arrow9Button.setIcon(UB);
-            }
+            public void mouseEntered(MouseEvent e) {Arrow9Button.setIcon(UB);}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                Arrow9Button.setIcon(U);
-            }
+            public void mouseExited(MouseEvent e) {Arrow9Button.setIcon(U);}
         });
         Arrow10Button.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                Arrow10Button.setIcon(LB);
-            }
+            public void mouseEntered(MouseEvent e) {Arrow10Button.setIcon(LB);}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                Arrow10Button.setIcon(L);
-            }
+            public void mouseExited(MouseEvent e) {Arrow10Button.setIcon(L);}
         });
         Arrow11Button.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                Arrow11Button.setIcon(LB);
-            }
+            public void mouseEntered(MouseEvent e) {Arrow11Button.setIcon(LB);}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                Arrow11Button.setIcon(L);
-            }
+            public void mouseExited(MouseEvent e) {Arrow11Button.setIcon(L);}
         });
         Arrow12Button.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                Arrow12Button.setIcon(LB);
-            }
+            public void mouseEntered(MouseEvent e) {Arrow12Button.setIcon(LB);}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                Arrow12Button.setIcon(L);
-            }
+            public void mouseExited(MouseEvent e) {Arrow12Button.setIcon(L);}
         });
         //Adding arrows
         frame.add(Arrow1Button);
@@ -2046,18 +1575,125 @@ public class GraphicsLab extends labyDriver {
         frame.add(Arrow12Button);
     }
 
+    private void moveDown (int col){
+        if(!(lastTile == col && lastDir == 3)){
+            board.SlideTileDown(col);
+            for(int i = 0; i < 50; i++){
+                Tile hold = board.getTile(i);
+                TileGraphics(i + 1, hold.getImage());
+            }
+            frame.repaint();
+            if(blue.slideDown(col))
+            { Player1.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
+            if(yellow.slideDown(col))
+            { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
+            if(green.slideDown(col))
+            { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
+            if(red.slideDown(col))
+            { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+            frame.repaint();
+            switch(col){
+                case 1: lastTile = 9; break;
+                case 3: lastTile = 8; break;
+                case 5: lastTile = 7; break;
+            }
+            lastDir = 1;
+            turn += 4;
+        }
+    }
+
+    private void moveUp (int col){
+        if(!(lastTile == col && lastDir == 1)){
+            board.SlideTileUp(col);
+            for(int i = 0; i < 50; i++){
+                Tile hold = board.getTile(i);
+                TileGraphics(i + 1, hold.getImage());
+            }
+            frame.repaint();
+            if(blue.slideUp(col))
+            { Player1.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
+            if(yellow.slideUp(col))
+            { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
+            if(green.slideUp(col))
+            { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
+            if(red.slideUp(col))
+            { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+            frame.repaint();
+            switch(col){
+                case 1: lastTile = 1; break;
+                case 3: lastTile = 3; break;
+                case 5: lastTile = 5; break;
+            }
+            lastDir = 3;
+            turn += 4;
+        }
+    }
+
+    private void moveLeft(int row){
+        if(!(lastTile == row && lastDir == 4)){
+            board.SlideTileLeft(row);
+            for(int i = 0; i < 50; i++){
+                Tile hold = board.getTile(i);
+                TileGraphics(i + 1, hold.getImage());
+            }
+            frame.repaint();
+            if(blue.slideLeft(row))
+            { Player1.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
+            if(yellow.slideLeft(row))
+            { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
+            if(green.slideLeft(row))
+            { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
+            if(red.slideLeft(row))
+            { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+            frame.repaint();
+            switch(row){
+                case 1: lastTile = 1; break;
+                case 3: lastTile = 3; break;
+                case 5: lastTile = 5; break;
+            }
+            lastDir = 2;
+            turn += 4;
+        }
+    }
+
+    private void moveRight(int row){
+        if(!(lastTile == row && lastDir == 2)){
+            board.SlideTileRight(row);
+            for(int i = 0; i < 50; i++){
+                Tile hold = board.getTile(i);
+                TileGraphics(i + 1, hold.getImage());
+            }
+            frame.repaint();
+            if(blue.slideRight(row))
+            { Player1.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
+            if(yellow.slideRight(row))
+            { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
+            if(green.slideRight(row))
+            { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
+            if(red.slideRight(row))
+            { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+            frame.repaint();
+            switch(row){
+                case 1: lastTile = 1; break;
+                case 3: lastTile = 3; break;
+                case 5: lastTile = 5; break;
+            }
+            lastDir = 4;
+            turn += 4;
+        }
+    }
+
     //Player Piece
     public void GraphicsPlayerPiece(){
+        ChangeP('B');
+        ChangeP('R');
+        ChangeP('Y');
+        ChangeP('G');
 
-        ChangeP("B");
-        ChangeP("R");
-        ChangeP("Y");
-        ChangeP("G");
-
-        Player = new JFrame();
-        Player.setUndecorated(true);
-        Player.setAlwaysOnTop(true);
-        Player.setBounds(580,110,35,50);
+        Player1 = new JFrame();
+        Player1.setUndecorated(true);
+        Player1.setAlwaysOnTop(true);
+        Player1.setBounds(580,110,35,50);
         playerB = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -2066,135 +1702,105 @@ public class GraphicsLab extends labyDriver {
             }
         };
         try {
-            BlueWiz = ImageIO.read(new File("BluePLayer.png"));
+            BlueWiz = ImageIO.read(new File("BluePlayer.png"));
         } catch (IOException e) {
             e.printStackTrace();
         }
         playerB.setBounds(200,200,35,50);
-        Player.setBackground(new Color(0,0,0,0));
-        Player.add(playerB);
+        Player1.setBackground(new Color(0,0,0,0));
+        Player1.add(playerB);
         playerB.setBackground(new Color(0,0,0,0));
-        Player.setVisible(true);
+        Player1.setVisible(true);
 
         frame.addWindowListener(new WindowListener() {
             @Override
-            public void windowOpened(WindowEvent e) {
-
-            }
+            public void windowOpened(WindowEvent e) {}
 
             @Override
-            public void windowClosing(WindowEvent e) {
-
-            }
+            public void windowClosing(WindowEvent e) {}
 
             @Override
-            public void windowClosed(WindowEvent e) {
-
-            }
+            public void windowClosed(WindowEvent e) {}
 
             @Override
-            public void windowIconified(WindowEvent e) {
-                Player.setVisible(false);
-            }
+            public void windowIconified(WindowEvent e) {Player1.setVisible(false);}
 
             @Override
-            public void windowDeiconified(WindowEvent e) {
-                Player.setVisible(true);
-            }
+            public void windowDeiconified(WindowEvent e) { Player1.setVisible(true);}
 
             @Override
-            public void windowActivated(WindowEvent e) {
-
-            }
+            public void windowActivated(WindowEvent e) {}
 
             @Override
-            public void windowDeactivated(WindowEvent e) {
-
-            }
+            public void windowDeactivated(WindowEvent e) {}
         });
 
         //Mouse Listener
-        Player.addMouseListener(new MouseListener() {
+        Player1.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                PointerInfo a = MouseInfo.getPointerInfo();
-                Point b = a.getLocation();
-                int xm = (int) b.getX();
-                int ym = (int) b.getY();
-                Player.setBounds(xm-15,ym-15,35,50);
-                System.out.println(xm+ " " +ym);
+                if(turn == 6 && com2 == 0){
+                    PointerInfo a = MouseInfo.getPointerInfo();
+                    Point b = a.getLocation();
+                    int xm = (int) b.getX();
+                    int ym = (int) b.getY();
+                    Player1.setBounds(xm-15,ym-15,35,50);
+                    System.out.println(xm+ " " +ym);
 
-                pX = (int) (MouseInfo.getPointerInfo().getLocation().getX() - 110) / 75;
-                if(pX>6) pX=6;
-                if(pX<0) pX=0;
-                pY = (int)(MouseInfo.getPointerInfo().getLocation().getY() - 100) / 75;
-                if(pY>6) pY=6;
-                if(pY<0) pY=0;
-                blue.setXY(pX, pY);
+                    pX = (int) (MouseInfo.getPointerInfo().getLocation().getX() - 110) / 75;
+                    if(pX>6) pX=6;
+                    if(pX<0) pX=0;
+                    pY = (int)(MouseInfo.getPointerInfo().getLocation().getY() - 100) / 75;
+                    if(pY>6) pY=6;
+                    if(pY<0) pY=0;
+                    blue.setXY(pX, pY);
 
-                if(check && check2)
-                {
-                    Player.setBounds(580,110,35,50);
-                    pX = 0;
-                    pY = 0;
-                    blue.setXY(pX,pY);
+                    if(check && check2)
+                    {
+                        Player1.setBounds(580,110,35,50);
+                        pX = 0;
+                        pY = 0;
+                        blue.setXY(pX,pY);
+                    }
 
+                    ChangeP('B');
+                    frame.repaint();
+                    if(blue.checkTreasure(board.getTreasure(pX, pY)) == 0)
+                    {
+                        JOptionPane.showMessageDialog(null, "Blue Player Won!");
+                        System.exit(1);
+                    }
+                    turn = 3;
                 }
-
-                ChangeP("B");
-                frame.repaint();
-               if(blue.checkTreasure(board.getTreasure(pX, pY)) == 0)
-               {
-                   JOptionPane.showMessageDialog(null, "Blue Player Won!");
-                   System.exit(1);
-               }
             }
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                check2 = false;
-            }
+            public void mouseEntered(MouseEvent e) {check2 = false;}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                check2 = true;
-            }
+            public void mouseExited(MouseEvent e) {check2 = true;}
         });
         frame.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                check = false;
-            }
+            public void mouseEntered(MouseEvent e) {check = false;}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                check = true;
-            }
+            public void mouseExited(MouseEvent e) {check = true;}
         });
 
         Player2 = new JFrame();
@@ -2221,120 +1827,91 @@ public class GraphicsLab extends labyDriver {
 
         frame.addWindowListener(new WindowListener() {
             @Override
-            public void windowOpened(WindowEvent e) {
-
-            }
+            public void windowOpened(WindowEvent e) {}
 
             @Override
-            public void windowClosing(WindowEvent e) {
-
-            }
+            public void windowClosing(WindowEvent e) {}
 
             @Override
-            public void windowClosed(WindowEvent e) {
-
-            }
+            public void windowClosed(WindowEvent e) {}
 
             @Override
-            public void windowIconified(WindowEvent e) {
-                Player2.setVisible(false);
-            }
+            public void windowIconified(WindowEvent e) {Player2.setVisible(false);}
 
             @Override
-            public void windowDeiconified(WindowEvent e) {
-                Player2.setVisible(true);
-            }
+            public void windowDeiconified(WindowEvent e) {Player2.setVisible(true);}
 
             @Override
-            public void windowActivated(WindowEvent e) {
-
-            }
+            public void windowActivated(WindowEvent e) {}
 
             @Override
-            public void windowDeactivated(WindowEvent e) {
-
-            }
+            public void windowDeactivated(WindowEvent e) {}
         });
 
         //Mouse Listener
         Player2.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                PointerInfo a = MouseInfo.getPointerInfo();
-                Point b = a.getLocation();
-                int xm = (int) b.getX();
-                int ym = (int) b.getY();
+                if(turn == 8 && com4 == 0){
+                    PointerInfo a = MouseInfo.getPointerInfo();
+                    Point b = a.getLocation();
+                    int xm = (int) b.getX();
+                    int ym = (int) b.getY();
 
-                pX = (int) (MouseInfo.getPointerInfo().getLocation().getX() - 110) / 75;
-                if(pX>6) pX=6;
-                if(pX<0) pX=0;
-                pY = (int)(MouseInfo.getPointerInfo().getLocation().getY() - 100) / 75;
-                if(pY>6) pY=6;
-                if(pY<0) pY=0;
-                yellow.setXY(pX, pY);
-
-                Player2.setBounds(xm-15,ym-15,35,50);
-                if(check && check2)
-                {
-                    Player2.setBounds(125,560,35,50);
-                    pX = 0;
-                    pY = 0;
+                    pX = (int) (MouseInfo.getPointerInfo().getLocation().getX() - 110) / 75;
+                    if(pX>6) pX=6;
+                    if(pX<0) pX=0;
+                    pY = (int)(MouseInfo.getPointerInfo().getLocation().getY() - 100) / 75;
+                    if(pY>6) pY=6;
+                    if(pY<0) pY=0;
                     yellow.setXY(pX, pY);
-                }
-                ChangeP("Y");
-                frame.repaint();
-                if(yellow.checkTreasure(board.getTreasure(pX, pY)) == 0)
-                {
-                    JOptionPane.showMessageDialog(null, "Yellow Player Won!");
-                    System.exit(1);
+
+                    Player2.setBounds(xm-15,ym-15,35,50);
+                    if(check && check2)
+                    {
+                        Player2.setBounds(125,560,35,50);
+                        pX = 0;
+                        pY = 0;
+                        yellow.setXY(pX, pY);
+                    }
+                    ChangeP('Y');
+                    frame.repaint();
+                    if(yellow.checkTreasure(board.getTreasure(pX, pY)) == 0)
+                    {
+                        JOptionPane.showMessageDialog(null, "Yellow Player Won!");
+                        System.exit(1);
+                    }
+                    turn = 1;
                 }
             }
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                check2 = false;
-            }
+            public void mouseEntered(MouseEvent e) {check2 = false;}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                check2 = true;
-            }
+            public void mouseExited(MouseEvent e) {check2 = true;}
         });
         frame.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                check = false;
-            }
+            public void mouseEntered(MouseEvent e) {check = false;}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                check = true;
-            }
+            public void mouseExited(MouseEvent e) {check = true;}
         });
 
         Player3 = new JFrame();
@@ -2361,120 +1938,91 @@ public class GraphicsLab extends labyDriver {
 
         frame.addWindowListener(new WindowListener() {
             @Override
-            public void windowOpened(WindowEvent e) {
-
-            }
+            public void windowOpened(WindowEvent e) {}
 
             @Override
-            public void windowClosing(WindowEvent e) {
-
-            }
+            public void windowClosing(WindowEvent e) {}
 
             @Override
-            public void windowClosed(WindowEvent e) {
-
-            }
+            public void windowClosed(WindowEvent e) {}
 
             @Override
-            public void windowIconified(WindowEvent e) {
-                Player3.setVisible(false);
-            }
+            public void windowIconified(WindowEvent e) {Player3.setVisible(false);}
 
             @Override
-            public void windowDeiconified(WindowEvent e) {
-                Player3.setVisible(true);
-            }
+            public void windowDeiconified(WindowEvent e) {Player3.setVisible(true);}
 
             @Override
-            public void windowActivated(WindowEvent e) {
-
-            }
+            public void windowActivated(WindowEvent e) {}
 
             @Override
-            public void windowDeactivated(WindowEvent e) {
-
-            }
+            public void windowDeactivated(WindowEvent e) {}
         });
 
         //Mouse Listener
         Player3.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                PointerInfo a = MouseInfo.getPointerInfo();
-                Point b = a.getLocation();
-                int xm = (int) b.getX();
-                int ym = (int) b.getY();
-                Player3.setBounds(xm-15,ym-15,35,50);
+                if(turn == 7 && com3 == 0){
+                    PointerInfo a = MouseInfo.getPointerInfo();
+                    Point b = a.getLocation();
+                    int xm = (int) b.getX();
+                    int ym = (int) b.getY();
+                    Player3.setBounds(xm-15,ym-15,35,50);
 
-                pX = (int) (MouseInfo.getPointerInfo().getLocation().getX() - 110) / 75;
-                if(pX>6) pX=6;
-                if(pX<0) pX=0;
-                pY = (int)(MouseInfo.getPointerInfo().getLocation().getY() - 100) / 75;
-                if(pY>6) pY=6;
-                if(pY<0) pY=0;
-                green.setXY(pX, pY);
-
-                if(check && check2)
-                {
-                    Player3.setBounds(580,560,35,50);
-                    pX = 0;
-                    pY = 0;
+                    pX = (int) (MouseInfo.getPointerInfo().getLocation().getX() - 110) / 75;
+                    if(pX>6) pX=6;
+                    if(pX<0) pX=0;
+                    pY = (int)(MouseInfo.getPointerInfo().getLocation().getY() - 100) / 75;
+                    if(pY>6) pY=6;
+                    if(pY<0) pY=0;
                     green.setXY(pX, pY);
-                }
-                ChangeP("G");
-                frame.repaint();
-                if(green.checkTreasure(board.getTreasure(pX, pY)) == 0)
-                {
-                    JOptionPane.showMessageDialog(null, "Green Player Won!");
-                    System.exit(1);
+
+                    if(check && check2)
+                    {
+                        Player3.setBounds(580,560,35,50);
+                        pX = 0;
+                        pY = 0;
+                        green.setXY(pX, pY);
+                    }
+                    ChangeP('G');
+                    frame.repaint();
+                    if(green.checkTreasure(board.getTreasure(pX, pY)) == 0)
+                    {
+                        JOptionPane.showMessageDialog(null, "Green Player Won!");
+                        System.exit(1);
+                    }
+                    turn = 4;
                 }
             }
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                check2 = false;
-            }
+            public void mouseEntered(MouseEvent e) {check2 = false;}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                check2 = true;
-            }
+            public void mouseExited(MouseEvent e) {check2 = true;}
         });
         frame.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                check = false;
-            }
+            public void mouseEntered(MouseEvent e) {check = false;}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                check = true;
-            }
+            public void mouseExited(MouseEvent e) {check = true;}
         });
 
         Player4 = new JFrame();
@@ -2501,233 +2049,204 @@ public class GraphicsLab extends labyDriver {
 
         frame.addWindowListener(new WindowListener() {
             @Override
-            public void windowOpened(WindowEvent e) {
-
-            }
+            public void windowOpened(WindowEvent e) {}
 
             @Override
-            public void windowClosing(WindowEvent e) {
-
-            }
+            public void windowClosing(WindowEvent e) {}
 
             @Override
-            public void windowClosed(WindowEvent e) {
-
-            }
+            public void windowClosed(WindowEvent e) {}
 
             @Override
-            public void windowIconified(WindowEvent e) {
-                Player4.setVisible(false);
-            }
+            public void windowIconified(WindowEvent e) {Player4.setVisible(false);}
 
             @Override
-            public void windowDeiconified(WindowEvent e) {
-                Player4.setVisible(true);
-            }
+            public void windowDeiconified(WindowEvent e) {Player4.setVisible(true);}
 
             @Override
-            public void windowActivated(WindowEvent e) {
-
-            }
+            public void windowActivated(WindowEvent e) {}
 
             @Override
-            public void windowDeactivated(WindowEvent e) {
-
-            }
+            public void windowDeactivated(WindowEvent e) {}
         });
 
         //Mouse Listener
         Player4.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                PointerInfo a = MouseInfo.getPointerInfo();
-                Point b = a.getLocation();
-                int xm = (int) b.getX();
-                int ym = (int) b.getY();
-                Player4.setBounds(xm-15,ym-15,35,50);
+                if(turn == 5 && com1 == 0){
+                    PointerInfo a = MouseInfo.getPointerInfo();
+                    Point b = a.getLocation();
+                    int xm = (int) b.getX();
+                    int ym = (int) b.getY();
+                    Player4.setBounds(xm-15,ym-15,35,50);
 
-                pX = (int) (MouseInfo.getPointerInfo().getLocation().getX() - 110) / 75;
-                if(pX>6) pX=6;
-                if(pX<0) pX=0;
-                pY = (int)(MouseInfo.getPointerInfo().getLocation().getY() - 100) / 75;
-                if(pY>6) pY=6;
-                if(pY<0) pY=0;
-                red.setXY(pX, pY);
-                if(check && check2)
-                {
-                    Player4.setBounds(125,110,35,50);
-
-                    pX = 0;
-                    pY = 0;
+                    pX = (int) (MouseInfo.getPointerInfo().getLocation().getX() - 110) / 75;
+                    if(pX>6) pX=6;
+                    if(pX<0) pX=0;
+                    pY = (int)(MouseInfo.getPointerInfo().getLocation().getY() - 100) / 75;
+                    if(pY>6) pY=6;
+                    if(pY<0) pY=0;
                     red.setXY(pX, pY);
-                    System.out.println(pX + " " + pY);
-                }
-                ChangeP("R");
-                frame.repaint();
-                if(red.checkTreasure(board.getTreasure(pX, pY)) == 0)
-                {
-                    JOptionPane.showMessageDialog(null, "Red Player Won!");
-                    System.exit(1);
+                    if(check && check2)
+                    {
+                        Player4.setBounds(125,110,35,50);
+
+                        pX = 0;
+                        pY = 0;
+                        red.setXY(pX, pY);
+                        System.out.println(pX + " " + pY);
+                    }
+                    ChangeP('R');
+                    frame.repaint();
+                    if(red.checkTreasure(board.getTreasure(pX, pY)) == 0)
+                    {
+                        JOptionPane.showMessageDialog(null, "Red Player Won!");
+                        System.exit(1);
+                    }
+                    turn = 2;
                 }
             }
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                check2 = false;
-            }
+            public void mouseEntered(MouseEvent e) {check2 = false;}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                check2 = true;
-            }
+            public void mouseExited(MouseEvent e) {check2 = true;}
         });
         frame.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) {}
 
             @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
+            public void mousePressed(MouseEvent e) {}
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {
-                check = false;
-            }
+            public void mouseEntered(MouseEvent e) {check = false;}
 
             @Override
-            public void mouseExited(MouseEvent e) {
-                check = true;
-            }
+            public void mouseExited(MouseEvent e) {check = true;}
         });
     }
 
-    public void ChangeP(String Piece) {
-        if (Piece == "B") {
-            int tile = blue.checkTreasure(board.getTreasure(pX, pY));
-            char temp = ' ';
-            if (tile != 0) {
-                temp = 'T';
-            } else {
-                temp = 'L';
-            }
-            T1 = new JPanel() {
-                @Override
-                protected void paintComponent(Graphics g) {
-                    super.paintComponent(g);
-                    g.drawImage(TP1, 0, 0, null);
+    public void ChangeP(char Piece) {
+        int tile;
+        char temp;
+        JLabel label1 = new JLabel("Test");
+        switch(Piece){
+            case 'B': 
+                tile = blue.checkTreasure(board.getTreasure(pX, pY));
+                temp = ' ';
+                if (tile != 0) {
+                    temp = 'T';
+                } else {
+                    temp = 'L';
                 }
-            };
-            try {
-                TP1 = ImageIO.read(new File(AssignTile(tile, temp, 0)));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            T1.setBounds(900, 10, 75, 75);
-            frame.add(T1);
-            JLabel label1 = new JLabel("Test");
-            label1.setText("Player Blue");
-            label1.setBounds(900,70,100,60);
-            frame.add(label1);
-        }
-        if (Piece == "R") {
-            int tile = red.checkTreasure(board.getTreasure(pX, pY));
-            char temp = ' ';
-            if (tile != 0) {
-                temp = 'T';
-            } else {
-                temp = 'L';
-            }
-            T2 = new JPanel() {
-                @Override
-                protected void paintComponent(Graphics g) {
-                    super.paintComponent(g);
-                    g.drawImage(TP2, 0, 0, null);
+                T1 = new JPanel() {
+                    @Override
+                    protected void paintComponent(Graphics g) {
+                        super.paintComponent(g);
+                        g.drawImage(TP1, 0, 0, null);
+                    }
+                };
+                try {
+                    TP1 = ImageIO.read(new File(AssignTile(tile, temp, 0)));
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            };
-            try {
-                TP2 = ImageIO.read(new File(AssignTile(tile, temp, 0)));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            T2.setBounds(1000, 10, 75, 75);
-            frame.add(T2);
-            JLabel label1 = new JLabel("Test");
-            label1.setText("Player Red");
-            label1.setBounds(1000,70,100,60);
-            frame.add(label1);
-        }
-        if (Piece == "G") {
-            int tile = green.checkTreasure(board.getTreasure(pX, pY));
-            char temp = ' ';
-            if (tile != 0) {
-                temp = 'T';
-            } else {
-                temp = 'L';
-            }
-            T3 = new JPanel() {
-                @Override
-                protected void paintComponent(Graphics g) {
-                    super.paintComponent(g);
-                    g.drawImage(TP3, 0, 0, null);
+                T1.setBounds(900, 10, 75, 75);
+                frame.add(T1);
+                label1.setText("Player Blue");
+                label1.setBounds(900,70,100,60);
+                frame.add(label1);
+            break;
+            case 'R': 
+                tile = red.checkTreasure(board.getTreasure(pX, pY));
+                temp = ' ';
+                if (tile != 0) {
+                    temp = 'T';
+                } else {
+                    temp = 'L';
                 }
-            };
-            try {
-                TP3 = ImageIO.read(new File(AssignTile(tile, temp, 0)));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            T3.setBounds(900, 150, 75, 75);
-            frame.add(T3);
-            JLabel label1 = new JLabel("Test");
-            label1.setText("Player Green");
-            label1.setBounds(900,200,100,60);
-            frame.add(label1);
-        }
-        if (Piece == "Y") {
-            int tile = yellow.checkTreasure(board.getTreasure(pX, pY));
-            char temp = ' ';
-            if (tile != 0) {
-                temp = 'T';
-            } else {
-                temp = 'L';
-            }
-            T4 = new JPanel() {
-                @Override
-                protected void paintComponent(Graphics g) {
-                    super.paintComponent(g);
-                    g.drawImage(TP4, 0, 0, null);
+                T2 = new JPanel() {
+                    @Override
+                    protected void paintComponent(Graphics g) {
+                        super.paintComponent(g);
+                        g.drawImage(TP2, 0, 0, null);
+                    }
+                };
+                try {
+                    TP2 = ImageIO.read(new File(AssignTile(tile, temp, 0)));
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            };
-            try {
-                TP4 = ImageIO.read(new File(AssignTile(tile, temp, 0)));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            T4.setBounds(1000, 150, 75, 75);
-            frame.add(T4);
-            JLabel label1 = new JLabel("Test");
-            label1.setText("Player Yellow");
-            label1.setBounds(1000,200,100,60);
-            frame.add(label1);
-
+                T2.setBounds(1000, 10, 75, 75);
+                frame.add(T2);
+                label1.setText("Player Red");
+                label1.setBounds(1000,70,100,60);
+                frame.add(label1);
+            break;
+            case 'G': 
+                tile = green.checkTreasure(board.getTreasure(pX, pY));
+                temp = ' ';
+                if (tile != 0) {
+                    temp = 'T';
+                } else {
+                    temp = 'L';
+                }
+                T3 = new JPanel() {
+                    @Override
+                    protected void paintComponent(Graphics g) {
+                        super.paintComponent(g);
+                        g.drawImage(TP3, 0, 0, null);
+                    }
+                };
+                try {
+                    TP3 = ImageIO.read(new File(AssignTile(tile, temp, 0)));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                T3.setBounds(900, 150, 75, 75);
+                frame.add(T3);
+                label1.setText("Player Green");
+                label1.setBounds(900,200,100,60);
+                frame.add(label1);
+            break;
+            case 'Y': 
+                tile = yellow.checkTreasure(board.getTreasure(pX, pY));
+                temp = ' ';
+                if (tile != 0) {
+                    temp = 'T';
+                } else {
+                    temp = 'L';
+                }
+                T4 = new JPanel() {
+                    @Override
+                    protected void paintComponent(Graphics g) {
+                        super.paintComponent(g);
+                        g.drawImage(TP4, 0, 0, null);
+                    }
+                };
+                try {
+                    TP4 = ImageIO.read(new File(AssignTile(tile, temp, 0)));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                T4.setBounds(1000, 150, 75, 75);
+                frame.add(T4);
+                label1.setText("Player Yellow");
+                label1.setBounds(1000,200,100,60);
+                frame.add(label1);
+            break;
         }
     }
 }

@@ -13,61 +13,61 @@ public class TileGrid {
         Tile [] tileDeck = new Tile[34];
 
         //Create and Assign Static Tiles
-        tileMap[0] = new Tile('l', 90, 1);//treasure 1 is the player 1 starting square (Red)
-        tileMap[6] = new Tile ('l', 180, 2);//treasure 2 is the player 2 starting square (Blue)
-        tileMap[42] = new Tile ('l', 180, 3);//treasure 3 is the player 3 starting square (Yellow)
-        tileMap[48] = new Tile ('l', 270, 4);//treasure 4 is the player 4 starting square (Green)
-        tileMap[2] = new Tile ('t', 90, 5);//treasure 5 is the Skull
-        tileMap[4] = new Tile ('t', 90, 6);//treasure 6 is the Sword
-        tileMap[14] = new Tile ('t', 0, 7);//treasure 7 is the Bag of Coins
-        tileMap[16] = new Tile ('t', 0, 8);//treasure 8 is the Key Ring
-        tileMap[18] = new Tile ('t', 90, 9);//treasure 9 is the Emerald
-        tileMap[20] = new Tile ('t', 180, 10);//treasure 10 is the Helmet
-        tileMap[28] = new Tile ('t', 0, 11);//treasure 11 is the Book
-        tileMap[30] = new Tile ('t', 270, 12);//treasure 12 is the Crown
-        tileMap[32] = new Tile ('t', 180, 13);//treasure 13 is the Chest
-        tileMap[34] = new Tile ('t', 180, 14);//treasure 14 is the Candelabra
-        tileMap[44] = new Tile ('t', 270, 15);//treasure 15 is the Map
-        tileMap[46] = new Tile ('t', 270, 16);//treasure 16 is the Ring
+        tileMap[0] = new Tile('l', 90, 1, "Tile_L_Red_");//treasure 1 is the player 1 starting square (Red)
+        tileMap[6] = new Tile ('l', 180, 2, "Tile_L_Blue_");//treasure 2 is the player 2 starting square (Blue)
+        tileMap[42] = new Tile ('l', 0, 3, "Tile_L_Yellow_");//treasure 3 is the player 3 starting square (Yellow)
+        tileMap[48] = new Tile ('l', 270, 4, "Tile_L_Green_");//treasure 4 is the player 4 starting square (Green)
+        tileMap[2] = new Tile ('t', 90, 5, "Tile_T_Skull_");//treasure 5 is the Skull
+        tileMap[4] = new Tile ('t', 90, 6, "Tile_T_Sword_");//treasure 6 is the Sword
+        tileMap[14] = new Tile ('t', 0, 7, "Tile_T_Coins_");//treasure 7 is the Bag of Coins
+        tileMap[16] = new Tile ('t', 0, 8, "Tile_T_Keys_");//treasure 8 is the Key Ring
+        tileMap[18] = new Tile ('t', 90, 9, "Tile_T_Emerald_");//treasure 9 is the Emerald
+        tileMap[20] = new Tile ('t', 180, 10, "Tile_T_Knight_");//treasure 10 is the Helmet
+        tileMap[28] = new Tile ('t', 0, 11, "Tile_T_Book_");//treasure 11 is the Book
+        tileMap[30] = new Tile ('t', 270, 12, "Tile_T_Crown_");//treasure 12 is the Crown
+        tileMap[32] = new Tile ('t', 180, 13, "Tile_T_Chest_");//treasure 13 is the Chest
+        tileMap[34] = new Tile ('t', 180, 14, "Tile_T_Candleabra_");//treasure 14 is the Candelabra
+        tileMap[44] = new Tile ('t', 270, 15, "Tile_T_Map_");//treasure 15 is the Map
+        tileMap[46] = new Tile ('t', 270, 16, "Tile_T_Ring_");//treasure 16 is the Ring
 
         //Create Dynamic Tiles
         //12 Treasure tiles, 6 L and 6 T
-        tileDeck[0] = new Tile('l', TileGrid.randRot(), 17);//treasure 17 is the Spider
-        tileDeck[1] = new Tile('l', TileGrid.randRot(), 18);//treasure 18 is the Rat
-        tileDeck[2] = new Tile('l', TileGrid.randRot(), 19);//treasure 19 is the Moth
-        tileDeck[3] = new Tile('l', TileGrid.randRot(), 20);//treasure 20 is the Scarab
-        tileDeck[4] = new Tile('l', TileGrid.randRot(), 21);//treasure 21 is the Salamander
-        tileDeck[5] = new Tile('l', TileGrid.randRot(), 22);//treasure 22 is the Owl
-        tileDeck[6] = new Tile('t', TileGrid.randRot(), 23);//treasure 23 is the Bat
-        tileDeck[7] = new Tile('t', TileGrid.randRot(), 24);//treasure 24 is the Troll
-        tileDeck[8] = new Tile('t', TileGrid.randRot(), 25);//treasure 25 is the Ghost
-        tileDeck[9] = new Tile('t', TileGrid.randRot(), 26);//treasure 26 is the Djin
-        tileDeck[10] = new Tile('t', TileGrid.randRot(), 27);//treasure 27 is the Enchantress
-        tileDeck[11] = new Tile('t', TileGrid.randRot(), 28);//treasure 28 is the Dragon
+        tileDeck[0] = new Tile('l', TileGrid.randRot(), 17, "Tile_L_Spider_");//treasure 17 is the Spider
+        tileDeck[1] = new Tile('l', TileGrid.randRot(), 18, "Tile_L_Mouse_");//treasure 18 is the Rat
+        tileDeck[2] = new Tile('l', TileGrid.randRot(), 19, "Tile_L_Moth_");//treasure 19 is the Moth
+        tileDeck[3] = new Tile('l', TileGrid.randRot(), 20, "Tile_L_Beetle_");//treasure 20 is the Scarab
+        tileDeck[4] = new Tile('l', TileGrid.randRot(), 21, "Tile_L_Lizard_");//treasure 21 is the Salamander
+        tileDeck[5] = new Tile('l', TileGrid.randRot(), 22, "Tile_L_Owl_");//treasure 22 is the Owl
+        tileDeck[6] = new Tile('t', TileGrid.randRot(), 23, "Tile_T_Bat_");//treasure 23 is the Bat
+        tileDeck[7] = new Tile('t', TileGrid.randRot(), 24, "Tile_T_Troll_");//treasure 24 is the Troll
+        tileDeck[8] = new Tile('t', TileGrid.randRot(), 25, "Tile_T_Ghost_");//treasure 25 is the Ghost
+        tileDeck[9] = new Tile('t', TileGrid.randRot(), 26, "Tile_T_Genie_");//treasure 26 is the Djin
+        tileDeck[10] = new Tile('t', TileGrid.randRot(), 27, "Tile_T_Lady_");//treasure 27 is the Enchantress
+        tileDeck[11] = new Tile('t', TileGrid.randRot(), 28, "Tile_T_Dragon_");//treasure 28 is the Dragon
         //10 basic L tiles
-        tileDeck[12] = new Tile('l', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[13] = new Tile('l', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[14] = new Tile('l', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[15] = new Tile('l', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[16] = new Tile('l', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[17] = new Tile('l', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[18] = new Tile('l', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[19] = new Tile('l', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[20] = new Tile('l', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[21] = new Tile('l', TileGrid.randRot(), 0);//non-treasure tile
+        tileDeck[12] = new Tile('l', TileGrid.randRot(), 0, "Tile_L_");//non-treasure tile
+        tileDeck[13] = new Tile('l', TileGrid.randRot(), 0, "Tile_L_");//non-treasure tile
+        tileDeck[14] = new Tile('l', TileGrid.randRot(), 0, "Tile_L_");//non-treasure tile
+        tileDeck[15] = new Tile('l', TileGrid.randRot(), 0, "Tile_L_");//non-treasure tile
+        tileDeck[16] = new Tile('l', TileGrid.randRot(), 0, "Tile_L_");//non-treasure tile
+        tileDeck[17] = new Tile('l', TileGrid.randRot(), 0, "Tile_L_");//non-treasure tile
+        tileDeck[18] = new Tile('l', TileGrid.randRot(), 0, "Tile_L_");//non-treasure tile
+        tileDeck[19] = new Tile('l', TileGrid.randRot(), 0, "Tile_L_");//non-treasure tile
+        tileDeck[20] = new Tile('l', TileGrid.randRot(), 0, "Tile_L_");//non-treasure tile
+        tileDeck[21] = new Tile('l', TileGrid.randRot(), 0, "Tile_L_");//non-treasure tile
         //12 basic I tiles
-        tileDeck[22] = new Tile('i', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[23] = new Tile('i', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[24] = new Tile('i', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[25] = new Tile('i', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[26] = new Tile('i', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[27] = new Tile('i', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[28] = new Tile('i', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[29] = new Tile('i', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[30] = new Tile('i', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[31] = new Tile('i', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[32] = new Tile('i', TileGrid.randRot(), 0);//non-treasure tile
-        tileDeck[33] = new Tile('i', TileGrid.randRot(), 0);//non-treasure tile
+        tileDeck[22] = new Tile('i', TileGrid.randRot(), 0, "Tile_I_");//non-treasure tile
+        tileDeck[23] = new Tile('i', TileGrid.randRot(), 0, "Tile_I_");//non-treasure tile
+        tileDeck[24] = new Tile('i', TileGrid.randRot(), 0, "Tile_I_");//non-treasure tile
+        tileDeck[25] = new Tile('i', TileGrid.randRot(), 0, "Tile_I_");//non-treasure tile
+        tileDeck[26] = new Tile('i', TileGrid.randRot(), 0, "Tile_I_");//non-treasure tile
+        tileDeck[27] = new Tile('i', TileGrid.randRot(), 0, "Tile_I_");//non-treasure tile
+        tileDeck[28] = new Tile('i', TileGrid.randRot(), 0, "Tile_I_");//non-treasure tile
+        tileDeck[29] = new Tile('i', TileGrid.randRot(), 0, "Tile_I_");//non-treasure tile
+        tileDeck[30] = new Tile('i', TileGrid.randRot(), 0, "Tile_I_");//non-treasure tile
+        tileDeck[31] = new Tile('i', TileGrid.randRot(), 0, "Tile_I_");//non-treasure tile
+        tileDeck[32] = new Tile('i', TileGrid.randRot(), 0, "Tile_I_");//non-treasure tile
+        tileDeck[33] = new Tile('i', TileGrid.randRot(), 0, "Tile_I_");//non-treasure tile
 
         //Randomize Dynamic Tiles
         Tile hold;
@@ -122,55 +122,8 @@ public class TileGrid {
 
         int rotation;
         int r = rand.nextInt(4);
-        switch(r%4){
-            case 0:
-                rotation = 0;
-                break;
-            
-            case 1:
-                rotation = 90;
-                break;
-
-            case 2:
-                rotation = 180;
-                break;
-
-            case 3:
-                rotation = 270;
-                break;
-
-            default:
-                rotation = 0;
-        }
+        rotation = 90 * r;
         return rotation;
-    }
-
-    //CreateTile function (obsolete)
-    //Used to create a new tile on the board at position X,Y
-    public void CreateTile(int x, int y, char typ, char rot, int trs){
-        tileMap[y*SIZE+x] = new Tile(typ,rot,trs);
-        return;
-    }
-
-    //CreateTile function (obsolete)
-    //Used to create a new tile on the board at index position pos
-    public void CreateTile(int pos, char typ, char rot, int trs){
-        tileMap[pos] = new Tile(typ,rot,trs);
-        return;
-    }
-
-    //InsertTile function (obsolete)
-    //Used to insert an existing tile into the board at index position pos
-    public void InsertTile(int pos, Tile t){
-        tileMap[pos] = t;
-        return;
-    }
-
-    //InsertTile function (obsolete)
-    //Used to insert an existing tile into the board at position X,Y
-    public void InsertTile(int x, int y, Tile t){
-        tileMap[y*SIZE+x] = t;
-        return;
     }
 
     //Slide Left function
@@ -228,6 +181,52 @@ public class TileGrid {
         return;
     }
 
+    //Top Edge Check function
+    //Queries if a given tile is located at the top edge of the board 
+    public boolean topEdge(int pos){
+        return (pos <= 6);
+    }
+
+    //Top Edge Check function
+    //Queries if a given tile is located at the top edge of the board 
+    public boolean t_Edge(int pos){
+        return (pos <= 6);
+    }
+
+    //Bottom Edge Check function
+    //Queries if a given tile is located at the bottom edge of the board 
+    public boolean b_Edge(int pos){
+        return (pos >= 42 && pos != 49);
+    }
+
+    //Left Edge Check function
+    //Queries if a given tile is located at the left edge of the board 
+    public boolean l_Edge(int pos){
+        return ((pos % 7)== 0);
+    }
+
+    //Right Edge Check function
+    //Queries if a given tile is located at the right edge of the board 
+    public boolean r_Edge(int pos){
+        return ((pos % 7)== 6);
+    }
+
+    public boolean upCon(int pos){
+        return (t_Edge(pos) && tileMap[pos].connection[0] && tileMap[pos-7].connection[2]);
+    }
+
+    public boolean rightCon(int pos){
+        return (r_Edge(pos) && tileMap[pos].connection[1] && tileMap[pos+1].connection[3]);
+    }
+
+    public boolean downCon(int pos){
+        return (b_Edge(pos) && tileMap[pos].connection[2] && tileMap[pos+7].connection[0]);
+    }
+
+    public boolean leftCon(int pos){
+        return (l_Edge(pos) && tileMap[pos].connection[3] && tileMap[pos-1].connection[1]);
+    }
+
     //Print function
     //Prints the treasure indexes of all tiles in the board
     //Used for initial testing
@@ -252,12 +251,11 @@ public class TileGrid {
     }
 
     //Get functions
-    //Return rotation/treasure of tile A
+    //Return rotation/treasure/type/image/tile of tile A
     //Direct index and XY index accessible
     public int getRotation(int pos){
         return tileMap[pos].getRotation();
     }
-
     public int getRotation(int x,int y){
         return tileMap[x+SIZE*y].getRotation();
     }
@@ -265,7 +263,6 @@ public class TileGrid {
     public int getTreasure(int pos){
         return tileMap[pos].getTreasure();
     }
-
     public int getTreasure(int x,int y){
         return tileMap[x+SIZE*y].getTreasure();
     }
@@ -273,10 +270,17 @@ public class TileGrid {
     public char getType(int pos){
         return tileMap[pos].getType();
     }
-
     public char getType(int x,int y){
         return tileMap[x+SIZE*y].getType();
     }
+
+    public String getImage(int pos){
+        return tileMap[pos].getImage();
+    }
+    public String getImage(int x,int y){
+        return tileMap[x+SIZE*y].getImage();
+    }
+
     public Tile getTile(int x, int y){
         return tileMap[x+SIZE*y];
     }
