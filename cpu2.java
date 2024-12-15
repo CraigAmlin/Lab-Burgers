@@ -1,7 +1,10 @@
 import java.util.Random;
 
 public class cpu2 {
-    Random rand = new Random();
+    Random rand;
+    public cpu2 (){
+        rand = new Random();
+    }
 
     public int tile (int lasPos) {
         int x = rand.nextInt(12);
@@ -9,6 +12,10 @@ public class cpu2 {
             x = rand.nextInt(12);
         }
         return x;
+    }
+
+    public int rotate(){
+        return rand.nextInt(3);
     }
 
     public int move (int pos, TileGrid board, int treasure) {

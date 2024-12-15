@@ -1,7 +1,10 @@
 import java.util.Random;
 
 public class cpu1 {
-    Random rand = new Random();
+    Random rand;
+    public cpu1 (){
+        rand = new Random();
+    }
 
     public int tile (int lasPos) {
         int x = rand.nextInt(12);
@@ -9,6 +12,10 @@ public class cpu1 {
             x = rand.nextInt(12);
         }
         return x;
+    }
+
+    public int rotate(){
+        return rand.nextInt(3);
     }
 
     public int move (int pos, TileGrid board, int treasure) {
@@ -20,7 +27,6 @@ public class cpu1 {
         for(int i : accepted){
             if(board.upCon(i)){
                 target = i-7;
-                if(board.getTreasure(target) == treasure) return target;
                 if(!checkTarget(target, accepted)){
                     accepted[space] = target;
                     space++;
@@ -28,7 +34,6 @@ public class cpu1 {
             }
             if(board.rightCon(i)){
                 target = i+1;
-                if(board.getTreasure(target) == treasure) return target;
                 if(!checkTarget(target, accepted)){
                     accepted[space] = target;
                     space++;
@@ -36,7 +41,6 @@ public class cpu1 {
             }
             if(board.downCon(i)){
                 target = i+7;
-                if(board.getTreasure(target) == treasure) return target;
                 if(!checkTarget(target, accepted)){
                     accepted[space] = target;
                     space++;
@@ -44,7 +48,6 @@ public class cpu1 {
             }
             if(board.leftCon(i)){
                 target = i-1;
-                if(board.getTreasure(target) == treasure) return target;
                 if(!checkTarget(target, accepted)){
                     accepted[space] = target;
                     space++;

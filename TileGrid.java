@@ -119,11 +119,57 @@ public class TileGrid {
     //Used in board initialization
     public static int randRot(){
         Random rand = new Random();
-
         int rotation;
         int r = rand.nextInt(4);
         rotation = 90 * r;
         return rotation;
+    }
+
+    //Adjacency check function
+    public boolean adjacent(int start, int end){
+        int space = 0;
+        int [] accepted = new int[49];
+        accepted[space] = start;
+        space++;
+        int target = 0;
+        for(int i : accepted){
+            if(upCon(i)){
+                target = i-7;
+                if(!checkTarget(target, accepted)){
+                    accepted[space] = target;
+                    space++;
+                }
+            }
+            if(rightCon(i)){
+                target = i+1;
+                if(!checkTarget(target, accepted)){
+                    accepted[space] = target;
+                    space++;
+                }
+            }
+            if(downCon(i)){
+                target = i+7;
+                if(!checkTarget(target, accepted)){
+                    accepted[space] = target;
+                    space++;
+                }
+            }
+            if(leftCon(i)){
+                target = i-1;
+                if(!checkTarget(target, accepted)){
+                    accepted[space] = target;
+                    space++;
+                }
+            }
+        }
+        return checkTarget(end, accepted);
+    }
+
+    private boolean checkTarget(int target, int[] accepted){
+        for(int i : accepted) {
+            if(i == target) return true;
+        }
+        return false;
     }
 
     //Slide Left function
@@ -212,19 +258,19 @@ public class TileGrid {
     }
 
     public boolean upCon(int pos){
-        return (t_Edge(pos) && tileMap[pos].connection[0] && tileMap[pos-7].connection[2]);
+        return (!t_Edge(pos) && tileMap[pos].connection[0] && tileMap[pos-7].connection[2]);
     }
 
     public boolean rightCon(int pos){
-        return (r_Edge(pos) && tileMap[pos].connection[1] && tileMap[pos+1].connection[3]);
+        return (!r_Edge(pos) && tileMap[pos].connection[1] && tileMap[pos+1].connection[3]);
     }
 
     public boolean downCon(int pos){
-        return (b_Edge(pos) && tileMap[pos].connection[2] && tileMap[pos+7].connection[0]);
+        return (!b_Edge(pos) && tileMap[pos].connection[2] && tileMap[pos+7].connection[0]);
     }
 
     public boolean leftCon(int pos){
-        return (l_Edge(pos) && tileMap[pos].connection[3] && tileMap[pos-1].connection[1]);
+        return (!l_Edge(pos) && tileMap[pos].connection[3] && tileMap[pos-1].connection[1]);
     }
 
     //Print function

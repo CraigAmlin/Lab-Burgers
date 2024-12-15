@@ -14,16 +14,20 @@ import java.awt.image.ImageObserver;
 */
 
 /*
-Get basic random AI working
-Get AI to recognize board navigation and move to targeted squares
-Add toggle to set a player to computer controlled
+DO:
 
 DONE:
 Add turn system inside interaction loop
 Implemented no return tile rule
-Altered multiple functions to use Switch statments instead of nested if/else
+Altered multiple functions to use Switch statments instead of nested if/else's
 Added ImageName component to Tile class, reducing costly AssignTiles calls
 Altered Arrows to call shared functions, reducing duplicate code
+Altered player object names to be more consistent, Player 1 is always red, 2 is blue, 3 is green and 4 is yellow
+Get basic random AI working
+Get AI to recognize board navigation and move to targeted squares
+Added board check to player move, requiring tiles to be connected
+Add toggle to set a player to computer controlled
+Add autoplay button to let computer players take turns instantly
 */
 
 public class GraphicsLab extends labyDriver {
@@ -89,6 +93,11 @@ public class GraphicsLab extends labyDriver {
     private int com3 = 0;
     private int com4 = 0;
 
+    private cpu1 computer1 = new cpu1();
+    private cpu2 computer2 = new cpu2();
+
+    private boolean autoplay = false;
+
     //Variable to track where the last tile came from (to disallow immediate replacement)
     private int lastTile = 0;
     private int lastDir = 0;
@@ -119,7 +128,6 @@ public class GraphicsLab extends labyDriver {
         
 
         //Code for setting bounds of tiles and inserting them
-        //(position X, position Y,Image length X, image length Y)
         //Row 1
         Tile1.setBounds(100, 75, X, Y);
         Tile2.setBounds(175,75,X,Y);
@@ -181,38 +189,87 @@ public class GraphicsLab extends labyDriver {
 
         JButton R = new JButton("R");
         JButton L = new JButton("L");
+        JButton C = new JButton("COM");
+        JButton A = new JButton("Autoplay");
+        JButton p1 = new JButton("P1: " + com1);
+        JButton p2 = new JButton("P2: " + com2);
+        JButton p3 = new JButton("P3: " + com3);
+        JButton p4 = new JButton("P4: " + com4);
         R.setBounds(1100,300,100,100);
         L.setBounds(900,300,100,100);
+        C.setBounds(1000,400,100,50);
+        A.setBounds(1000,455,100,50);
+        p1.setBounds(1150,10,80,25);
+        p2.setBounds(1150,35,80,25);
+        p3.setBounds(1150,60,80,25);
+        p4.setBounds(1150,85,80,25);
         R.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                board.rotR();
-                try {
-                    Img50 = ImageIO.read(new File(board.getImage(49)));
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
-                frame.repaint();
-            }
+            public void actionPerformed(ActionEvent e) {rotateRight();}
         });
         L.addActionListener(new ActionListener() {
             @Override
+            public void actionPerformed(ActionEvent e) {rotateLeft();}
+        });
+        C.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {comTurn();}
+        });
+        A.addMouseListener (new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {autoplay = !autoplay;}
+            @Override
+            public void mousePressed(MouseEvent e) {while(autoplay){comTurn();}}
+            @Override
+            public void mouseReleased(MouseEvent e) {}
+            @Override
+            public void mouseEntered(MouseEvent e) {}
+            @Override
+            public void mouseExited(MouseEvent e) {}
+        });
+        p1.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
-                board.rotL();
-                try {
-                    Img50 = ImageIO.read(new File(board.getImage(49)));
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
-                }
-                frame.repaint();
+                com1++;
+                if(com1 > 2) com1 = 0;
+                p1.setText("P1: " + com1);
+            }
+        });
+        p2.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                com2++;
+                if(com2 > 2) com2 = 0;
+                p2.setText("P2: " + com2);
+            }
+        });
+        p3.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                com3++;
+                if(com3 > 2) com3 = 0;
+                p3.setText("P3: " + com3);
+            }
+        });
+        p4.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                com4++;
+                if(com4 > 2) com4 = 0;
+                p4.setText("P4: " + com4);
             }
         });
 
         frame.add(R);
         frame.add(L);
+        frame.add(C);
+        frame.add(A);
+        frame.add(p1);
+        frame.add(p2);
+        frame.add(p3);
+        frame.add(p4);
 
         //Creating and putting the images in the arrows
-        //As of 10/16 this is new and needs to be added to the main code
         IndicatorsAdd();
 
         //Code for actually adding the tiles and such to the frame
@@ -288,6 +345,26 @@ public class GraphicsLab extends labyDriver {
     //Creates and runs everything, mostly for figuring out what works and what doesnt
     public static void main(String[] args) {
         new GraphicsLab();
+    }
+
+    public void rotateRight(){
+        board.rotR();
+        try {
+            Img50 = ImageIO.read(new File(board.getImage(49)));
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+        frame.repaint();
+    }
+
+    public void rotateLeft(){
+        board.rotL();
+        try {
+            Img50 = ImageIO.read(new File(board.getImage(49)));
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+        frame.repaint();
     }
 
     //Will take the ID and Type from craig's tile class
@@ -1297,36 +1374,42 @@ public class GraphicsLab extends labyDriver {
         Arrow1Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(!((com1 != 0 && turn == 1) || (com2 != 0 && turn == 2) || (com3 != 0 && turn == 3) || (com4 != 0 && turn == 4)))
                 moveDown(1);
             }
         });
         Arrow2Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(!((com1 != 0 && turn == 1) || (com2 != 0 && turn == 2) || (com3 != 0 && turn == 3) || (com4 != 0 && turn == 4)))
                 moveDown(3);
             }
         });
         Arrow3Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(!((com1 != 0 && turn == 1) || (com2 != 0 && turn == 2) || (com3 != 0 && turn == 3) || (com4 != 0 && turn == 4)))
                 moveDown(5);
             }
         });
         Arrow4Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(!((com1 != 0 && turn == 1) || (com2 != 0 && turn == 2) || (com3 != 0 && turn == 3) || (com4 != 0 && turn == 4)))
                 moveLeft(1);
             }
         });
         Arrow5Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(!((com1 != 0 && turn == 1) || (com2 != 0 && turn == 2) || (com3 != 0 && turn == 3) || (com4 != 0 && turn == 4)))
                 moveLeft(3);
             }
         });
         Arrow6Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(!((com1 != 0 && turn == 1) || (com2 != 0 && turn == 2) || (com3 != 0 && turn == 3) || (com4 != 0 && turn == 4)))
                 moveLeft(5);
             }
 
@@ -1334,36 +1417,42 @@ public class GraphicsLab extends labyDriver {
         Arrow7Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(!((com1 != 0 && turn == 1) || (com2 != 0 && turn == 2) || (com3 != 0 && turn == 3) || (com4 != 0 && turn == 4)))
                 moveUp(5);
             }
         });
         Arrow8Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(!((com1 != 0 && turn == 1) || (com2 != 0 && turn == 2) || (com3 != 0 && turn == 3) || (com4 != 0 && turn == 4)))
                 moveUp(3);
             }
         });
         Arrow9Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(!((com1 != 0 && turn == 1) || (com2 != 0 && turn == 2) || (com3 != 0 && turn == 3) || (com4 != 0 && turn == 4)))
                 moveUp(1);
             }
         });
         Arrow10Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(!((com1 != 0 && turn == 1) || (com2 != 0 && turn == 2) || (com3 != 0 && turn == 3) || (com4 != 0 && turn == 4)))
                 moveRight(5);
             }
         });
         Arrow11Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(!((com1 != 0 && turn == 1) || (com2 != 0 && turn == 2) || (com3 != 0 && turn == 3) || (com4 != 0 && turn == 4)))
                 moveRight(3);
             }
         });
         Arrow12Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if(!((com1 != 0 && turn == 1) || (com2 != 0 && turn == 2) || (com3 != 0 && turn == 3) || (com4 != 0 && turn == 4)))
                 moveRight(1);
             }
         });
@@ -1371,192 +1460,144 @@ public class GraphicsLab extends labyDriver {
         Arrow1Button.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {}
-
             @Override
             public void mouseEntered(MouseEvent e) {Arrow1Button.setIcon(DB);}
-
             @Override
             public void mouseExited(MouseEvent e) {Arrow1Button.setIcon(D);}
         });
         Arrow2Button.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {}
-
             @Override
             public void mouseEntered(MouseEvent e) {Arrow2Button.setIcon(DB);}
-
             @Override
             public void mouseExited(MouseEvent e) {Arrow2Button.setIcon(D);}
         });
         Arrow3Button.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {}
-
             @Override
             public void mouseEntered(MouseEvent e) {Arrow3Button.setIcon(DB);}
-
             @Override
             public void mouseExited(MouseEvent e) {Arrow3Button.setIcon(D);}
         });
         Arrow4Button.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {}
-
             @Override
             public void mouseEntered(MouseEvent e) {Arrow4Button.setIcon(RB);}
-
             @Override
             public void mouseExited(MouseEvent e) {Arrow4Button.setIcon(R);}
         });
         Arrow5Button.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {}
-
             @Override
             public void mouseEntered(MouseEvent e) {Arrow5Button.setIcon(RB);}
-
             @Override
             public void mouseExited(MouseEvent e) {Arrow5Button.setIcon(R);}
         });
         Arrow6Button.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {}
-
             @Override
             public void mouseEntered(MouseEvent e) {Arrow6Button.setIcon(RB);}
-
             @Override
             public void mouseExited(MouseEvent e) {Arrow6Button.setIcon(R);}
         });
         Arrow7Button.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {}
-
             @Override
             public void mouseEntered(MouseEvent e) {Arrow7Button.setIcon(UB); }
-
             @Override
             public void mouseExited(MouseEvent e) {Arrow7Button.setIcon(U);}
         });
         Arrow8Button.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {}
-
             @Override
             public void mouseEntered(MouseEvent e) {Arrow8Button.setIcon(UB);}
-
             @Override
             public void mouseExited(MouseEvent e) {Arrow8Button.setIcon(U);}
         });
         Arrow9Button.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {}
-
             @Override
             public void mouseEntered(MouseEvent e) {Arrow9Button.setIcon(UB);}
-
             @Override
             public void mouseExited(MouseEvent e) {Arrow9Button.setIcon(U);}
         });
         Arrow10Button.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {}
-
             @Override
             public void mouseEntered(MouseEvent e) {Arrow10Button.setIcon(LB);}
-
             @Override
             public void mouseExited(MouseEvent e) {Arrow10Button.setIcon(L);}
         });
         Arrow11Button.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {}
-
             @Override
             public void mouseEntered(MouseEvent e) {Arrow11Button.setIcon(LB);}
-
             @Override
             public void mouseExited(MouseEvent e) {Arrow11Button.setIcon(L);}
         });
         Arrow12Button.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {}
-
             @Override
             public void mouseEntered(MouseEvent e) {Arrow12Button.setIcon(LB);}
-
             @Override
             public void mouseExited(MouseEvent e) {Arrow12Button.setIcon(L);}
         });
@@ -1576,21 +1617,17 @@ public class GraphicsLab extends labyDriver {
     }
 
     private void moveDown (int col){
-        if(!(lastTile == col && lastDir == 3)){
+        if(!(lastTile == col && lastDir == 3) && (turn < 5)){
             board.SlideTileDown(col);
             for(int i = 0; i < 50; i++){
                 Tile hold = board.getTile(i);
                 TileGraphics(i + 1, hold.getImage());
             }
             frame.repaint();
-            if(blue.slideDown(col))
-            { Player1.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
-            if(yellow.slideDown(col))
-            { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
-            if(green.slideDown(col))
-            { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
-            if(red.slideDown(col))
-            { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+            if(blue.slideDown(col)){ Player2.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
+            if(yellow.slideDown(col)){ Player4.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
+            if(green.slideDown(col)){ Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
+            if(red.slideDown(col)){ Player1.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
             frame.repaint();
             switch(col){
                 case 1: lastTile = 9; break;
@@ -1603,21 +1640,17 @@ public class GraphicsLab extends labyDriver {
     }
 
     private void moveUp (int col){
-        if(!(lastTile == col && lastDir == 1)){
+        if(!(lastTile == col && lastDir == 1) && (turn < 5)){
             board.SlideTileUp(col);
             for(int i = 0; i < 50; i++){
                 Tile hold = board.getTile(i);
                 TileGraphics(i + 1, hold.getImage());
             }
             frame.repaint();
-            if(blue.slideUp(col))
-            { Player1.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
-            if(yellow.slideUp(col))
-            { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
-            if(green.slideUp(col))
-            { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
-            if(red.slideUp(col))
-            { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+            if(blue.slideUp(col)){ Player2.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
+            if(yellow.slideUp(col)){ Player4.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
+            if(green.slideUp(col)){ Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
+            if(red.slideUp(col)){ Player1.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
             frame.repaint();
             switch(col){
                 case 1: lastTile = 1; break;
@@ -1630,21 +1663,17 @@ public class GraphicsLab extends labyDriver {
     }
 
     private void moveLeft(int row){
-        if(!(lastTile == row && lastDir == 4)){
+        if(!(lastTile == row && lastDir == 4) && (turn < 5)){
             board.SlideTileLeft(row);
             for(int i = 0; i < 50; i++){
                 Tile hold = board.getTile(i);
                 TileGraphics(i + 1, hold.getImage());
             }
             frame.repaint();
-            if(blue.slideLeft(row))
-            { Player1.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
-            if(yellow.slideLeft(row))
-            { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
-            if(green.slideLeft(row))
-            { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
-            if(red.slideLeft(row))
-            { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+            if(blue.slideLeft(row)){ Player2.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
+            if(yellow.slideLeft(row)){ Player4.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
+            if(green.slideLeft(row)){ Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
+            if(red.slideLeft(row)){ Player1.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
             frame.repaint();
             switch(row){
                 case 1: lastTile = 1; break;
@@ -1657,21 +1686,17 @@ public class GraphicsLab extends labyDriver {
     }
 
     private void moveRight(int row){
-        if(!(lastTile == row && lastDir == 2)){
+        if(!(lastTile == row && lastDir == 2) && (turn < 5)){
             board.SlideTileRight(row);
             for(int i = 0; i < 50; i++){
                 Tile hold = board.getTile(i);
                 TileGraphics(i + 1, hold.getImage());
             }
             frame.repaint();
-            if(blue.slideRight(row))
-            { Player1.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
-            if(yellow.slideRight(row))
-            { Player2.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
-            if(green.slideRight(row))
-            { Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
-            if(red.slideRight(row))
-            { Player4.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
+            if(blue.slideRight(row)){ Player2.setBounds(blue.getX()*75 +125 , blue.getY() * 75 +120, 35, 50);}
+            if(yellow.slideRight(row)){ Player4.setBounds(yellow.getX()*75 +125 , yellow.getY() * 75 +120, 35, 50);}
+            if(green.slideRight(row)){ Player3.setBounds(green.getX()*75 +125 , green.getY() * 75 +120, 35, 50);}
+            if(red.slideRight(row)){ Player1.setBounds(red.getX()*75 +125 , red.getY() * 75 +120, 35, 50);}
             frame.repaint();
             switch(row){
                 case 1: lastTile = 1; break;
@@ -1685,15 +1710,15 @@ public class GraphicsLab extends labyDriver {
 
     //Player Piece
     public void GraphicsPlayerPiece(){
-        ChangeP('B');
         ChangeP('R');
-        ChangeP('Y');
+        ChangeP('B');
         ChangeP('G');
+        ChangeP('Y');
 
-        Player1 = new JFrame();
-        Player1.setUndecorated(true);
-        Player1.setAlwaysOnTop(true);
-        Player1.setBounds(580,110,35,50);
+        Player2 = new JFrame();
+        Player2.setUndecorated(true);
+        Player2.setAlwaysOnTop(true);
+        Player2.setBounds(580,110,35,50);
         playerB = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -1707,42 +1732,34 @@ public class GraphicsLab extends labyDriver {
             e.printStackTrace();
         }
         playerB.setBounds(200,200,35,50);
-        Player1.setBackground(new Color(0,0,0,0));
-        Player1.add(playerB);
+        Player2.setBackground(new Color(0,0,0,0));
+        Player2.add(playerB);
         playerB.setBackground(new Color(0,0,0,0));
-        Player1.setVisible(true);
+        Player2.setVisible(true);
 
         frame.addWindowListener(new WindowListener() {
             @Override
             public void windowOpened(WindowEvent e) {}
-
             @Override
             public void windowClosing(WindowEvent e) {}
-
             @Override
             public void windowClosed(WindowEvent e) {}
-
             @Override
-            public void windowIconified(WindowEvent e) {Player1.setVisible(false);}
-
+            public void windowIconified(WindowEvent e) {Player2.setVisible(false);}
             @Override
-            public void windowDeiconified(WindowEvent e) { Player1.setVisible(true);}
-
+            public void windowDeiconified(WindowEvent e) { Player2.setVisible(true);}
             @Override
             public void windowActivated(WindowEvent e) {}
-
             @Override
             public void windowDeactivated(WindowEvent e) {}
         });
 
         //Mouse Listener
-        Player1.addMouseListener(new MouseListener() {
+        Player2.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {
                 if(turn == 6 && com2 == 0){
@@ -1750,63 +1767,53 @@ public class GraphicsLab extends labyDriver {
                     Point b = a.getLocation();
                     int xm = (int) b.getX();
                     int ym = (int) b.getY();
-                    Player1.setBounds(xm-15,ym-15,35,50);
-                    System.out.println(xm+ " " +ym);
-
                     pX = (int) (MouseInfo.getPointerInfo().getLocation().getX() - 110) / 75;
                     if(pX>6) pX=6;
                     if(pX<0) pX=0;
                     pY = (int)(MouseInfo.getPointerInfo().getLocation().getY() - 100) / 75;
                     if(pY>6) pY=6;
                     if(pY<0) pY=0;
-                    blue.setXY(pX, pY);
-
-                    if(check && check2)
-                    {
-                        Player1.setBounds(580,110,35,50);
-                        pX = 0;
-                        pY = 0;
-                        blue.setXY(pX,pY);
+                    if(board.adjacent(blue.getpos(), (pX+pY*7))){
+                        Player2.setBounds(xm-15,ym-15,35,50);
+                        blue.setXY(pX, pY);
+                        if(check && check2){
+                            Player2.setBounds(580,110,35,50);
+                            pX = 0;
+                            pY = 0;
+                            blue.setXY(pX,pY);
+                        }
+                        ChangeP('B');
+                        frame.repaint();
+                        if(blue.checkTreasure(board.getTreasure(pX, pY)) == 0){
+                            JOptionPane.showMessageDialog(null, "Blue Player Won!");
+                            System.exit(1);
+                        }
+                        turn = 3;
                     }
-
-                    ChangeP('B');
-                    frame.repaint();
-                    if(blue.checkTreasure(board.getTreasure(pX, pY)) == 0)
-                    {
-                        JOptionPane.showMessageDialog(null, "Blue Player Won!");
-                        System.exit(1);
-                    }
-                    turn = 3;
                 }
             }
-
             @Override
             public void mouseEntered(MouseEvent e) {check2 = false;}
-
             @Override
             public void mouseExited(MouseEvent e) {check2 = true;}
         });
         frame.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {}
-
             @Override
             public void mouseEntered(MouseEvent e) {check = false;}
-
             @Override
             public void mouseExited(MouseEvent e) {check = true;}
         });
 
-        Player2 = new JFrame();
-        Player2.setUndecorated(true);
-        Player2.setAlwaysOnTop(true);
-        Player2.setBounds(125,560,35,50);
+        Player4 = new JFrame();
+        Player4.setUndecorated(true);
+        Player4.setAlwaysOnTop(true);
+        Player4.setBounds(125,560,35,50);
         PlayerY = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -1820,42 +1827,33 @@ public class GraphicsLab extends labyDriver {
             e.printStackTrace();
         }
         PlayerY.setBounds(200,200,35,50);
-        Player2.setBackground(new Color(0,0,0,0));
-        Player2.add(PlayerY);
+        Player4.setBackground(new Color(0,0,0,0));
+        Player4.add(PlayerY);
         PlayerY.setBackground(new Color(0,0,0,0));
-        Player2.setVisible(true);
-
+        Player4.setVisible(true);
         frame.addWindowListener(new WindowListener() {
             @Override
             public void windowOpened(WindowEvent e) {}
-
             @Override
             public void windowClosing(WindowEvent e) {}
-
             @Override
             public void windowClosed(WindowEvent e) {}
-
             @Override
-            public void windowIconified(WindowEvent e) {Player2.setVisible(false);}
-
+            public void windowIconified(WindowEvent e) {Player4.setVisible(false);}
             @Override
-            public void windowDeiconified(WindowEvent e) {Player2.setVisible(true);}
-
+            public void windowDeiconified(WindowEvent e) {Player4.setVisible(true);}
             @Override
             public void windowActivated(WindowEvent e) {}
-
             @Override
             public void windowDeactivated(WindowEvent e) {}
         });
 
         //Mouse Listener
-        Player2.addMouseListener(new MouseListener() {
+        Player4.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {
                 if(turn == 8 && com4 == 0){
@@ -1863,53 +1861,45 @@ public class GraphicsLab extends labyDriver {
                     Point b = a.getLocation();
                     int xm = (int) b.getX();
                     int ym = (int) b.getY();
-
                     pX = (int) (MouseInfo.getPointerInfo().getLocation().getX() - 110) / 75;
                     if(pX>6) pX=6;
                     if(pX<0) pX=0;
                     pY = (int)(MouseInfo.getPointerInfo().getLocation().getY() - 100) / 75;
                     if(pY>6) pY=6;
                     if(pY<0) pY=0;
-                    yellow.setXY(pX, pY);
-
-                    Player2.setBounds(xm-15,ym-15,35,50);
-                    if(check && check2)
-                    {
-                        Player2.setBounds(125,560,35,50);
-                        pX = 0;
-                        pY = 0;
+                    if(board.adjacent(yellow.getpos(), (pX+pY*7))){
                         yellow.setXY(pX, pY);
+                        Player4.setBounds(xm-15,ym-15,35,50);
+                        if(check && check2){
+                            Player4.setBounds(125,560,35,50);
+                            pX = 0;
+                            pY = 0;
+                            yellow.setXY(pX, pY);
+                        }
+                        ChangeP('Y');
+                        frame.repaint();
+                        if(yellow.checkTreasure(board.getTreasure(pX, pY)) == 0){
+                            JOptionPane.showMessageDialog(null, "Yellow Player Won!");
+                            System.exit(1);
+                        }
+                        turn = 1;
                     }
-                    ChangeP('Y');
-                    frame.repaint();
-                    if(yellow.checkTreasure(board.getTreasure(pX, pY)) == 0)
-                    {
-                        JOptionPane.showMessageDialog(null, "Yellow Player Won!");
-                        System.exit(1);
-                    }
-                    turn = 1;
                 }
             }
-
             @Override
             public void mouseEntered(MouseEvent e) {check2 = false;}
-
             @Override
             public void mouseExited(MouseEvent e) {check2 = true;}
         });
         frame.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {}
-
             @Override
             public void mouseEntered(MouseEvent e) {check = false;}
-
             @Override
             public void mouseExited(MouseEvent e) {check = true;}
         });
@@ -1935,26 +1925,19 @@ public class GraphicsLab extends labyDriver {
         Player3.add(PlayerG);
         PlayerG.setBackground(new Color(0,0,0,0));
         Player3.setVisible(true);
-
         frame.addWindowListener(new WindowListener() {
             @Override
             public void windowOpened(WindowEvent e) {}
-
             @Override
             public void windowClosing(WindowEvent e) {}
-
             @Override
             public void windowClosed(WindowEvent e) {}
-
             @Override
             public void windowIconified(WindowEvent e) {Player3.setVisible(false);}
-
             @Override
             public void windowDeiconified(WindowEvent e) {Player3.setVisible(true);}
-
             @Override
             public void windowActivated(WindowEvent e) {}
-
             @Override
             public void windowDeactivated(WindowEvent e) {}
         });
@@ -1963,10 +1946,8 @@ public class GraphicsLab extends labyDriver {
         Player3.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {
                 if(turn == 7 && com3 == 0){
@@ -1974,61 +1955,53 @@ public class GraphicsLab extends labyDriver {
                     Point b = a.getLocation();
                     int xm = (int) b.getX();
                     int ym = (int) b.getY();
-                    Player3.setBounds(xm-15,ym-15,35,50);
-
                     pX = (int) (MouseInfo.getPointerInfo().getLocation().getX() - 110) / 75;
                     if(pX>6) pX=6;
                     if(pX<0) pX=0;
                     pY = (int)(MouseInfo.getPointerInfo().getLocation().getY() - 100) / 75;
                     if(pY>6) pY=6;
                     if(pY<0) pY=0;
-                    green.setXY(pX, pY);
-
-                    if(check && check2)
-                    {
-                        Player3.setBounds(580,560,35,50);
-                        pX = 0;
-                        pY = 0;
+                    if(board.adjacent(green.getpos(), (pX+pY*7))){
+                        Player3.setBounds(xm-15,ym-15,35,50);
                         green.setXY(pX, pY);
+                        if(check && check2){
+                            Player3.setBounds(580,560,35,50);
+                            pX = 0;
+                            pY = 0;
+                            green.setXY(pX, pY);
+                        }
+                        ChangeP('G');
+                        frame.repaint();
+                        if(green.checkTreasure(board.getTreasure(pX, pY)) == 0){
+                            JOptionPane.showMessageDialog(null, "Green Player Won!");
+                            System.exit(1);
+                        }
+                        turn = 4;
                     }
-                    ChangeP('G');
-                    frame.repaint();
-                    if(green.checkTreasure(board.getTreasure(pX, pY)) == 0)
-                    {
-                        JOptionPane.showMessageDialog(null, "Green Player Won!");
-                        System.exit(1);
-                    }
-                    turn = 4;
                 }
             }
-
             @Override
             public void mouseEntered(MouseEvent e) {check2 = false;}
-
             @Override
             public void mouseExited(MouseEvent e) {check2 = true;}
         });
         frame.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {}
-
             @Override
             public void mouseEntered(MouseEvent e) {check = false;}
-
             @Override
             public void mouseExited(MouseEvent e) {check = true;}
         });
 
-        Player4 = new JFrame();
-        Player4.setUndecorated(true);
-        Player4.setAlwaysOnTop(true);
-        Player4.setBounds(125,110,35,50);
+        Player1 = new JFrame();
+        Player1.setUndecorated(true);
+        Player1.setAlwaysOnTop(true);
+        Player1.setBounds(125,110,35,50);
         PlayerR = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -2042,42 +2015,33 @@ public class GraphicsLab extends labyDriver {
             e.printStackTrace();
         }
         PlayerR.setBounds(200,200,35,50);
-        Player4.setBackground(new Color(0,0,0,0));
-        Player4.add(PlayerR);
+        Player1.setBackground(new Color(0,0,0,0));
+        Player1.add(PlayerR);
         PlayerR.setBackground(new Color(0,0,0,0));
-        Player4.setVisible(true);
-
+        Player1.setVisible(true);
         frame.addWindowListener(new WindowListener() {
             @Override
             public void windowOpened(WindowEvent e) {}
-
             @Override
             public void windowClosing(WindowEvent e) {}
-
             @Override
             public void windowClosed(WindowEvent e) {}
-
             @Override
-            public void windowIconified(WindowEvent e) {Player4.setVisible(false);}
-
+            public void windowIconified(WindowEvent e) {Player1.setVisible(false);}
             @Override
-            public void windowDeiconified(WindowEvent e) {Player4.setVisible(true);}
-
+            public void windowDeiconified(WindowEvent e) {Player1.setVisible(true);}
             @Override
             public void windowActivated(WindowEvent e) {}
-
             @Override
             public void windowDeactivated(WindowEvent e) {}
         });
 
         //Mouse Listener
-        Player4.addMouseListener(new MouseListener() {
+        Player1.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {
                 if(turn == 5 && com1 == 0){
@@ -2085,54 +2049,45 @@ public class GraphicsLab extends labyDriver {
                     Point b = a.getLocation();
                     int xm = (int) b.getX();
                     int ym = (int) b.getY();
-                    Player4.setBounds(xm-15,ym-15,35,50);
-
                     pX = (int) (MouseInfo.getPointerInfo().getLocation().getX() - 110) / 75;
                     if(pX>6) pX=6;
                     if(pX<0) pX=0;
                     pY = (int)(MouseInfo.getPointerInfo().getLocation().getY() - 100) / 75;
                     if(pY>6) pY=6;
                     if(pY<0) pY=0;
-                    red.setXY(pX, pY);
-                    if(check && check2)
-                    {
-                        Player4.setBounds(125,110,35,50);
-
-                        pX = 0;
-                        pY = 0;
+                    if(board.adjacent(red.getpos(), (pX+pY*7))){
+                        Player1.setBounds(xm-15,ym-15,35,50);
                         red.setXY(pX, pY);
-                        System.out.println(pX + " " + pY);
+                        if(check && check2) {
+                            Player1.setBounds(125,110,35,50);
+                            pX = 0;
+                            pY = 0;
+                            red.setXY(pX, pY);
+                        }
+                        ChangeP('R');
+                        frame.repaint();
+                        if(red.checkTreasure(board.getTreasure(pX, pY)) == 0) {
+                            JOptionPane.showMessageDialog(null, "Red Player Won!");
+                            System.exit(1);
+                        }
+                        turn = 2;
                     }
-                    ChangeP('R');
-                    frame.repaint();
-                    if(red.checkTreasure(board.getTreasure(pX, pY)) == 0)
-                    {
-                        JOptionPane.showMessageDialog(null, "Red Player Won!");
-                        System.exit(1);
-                    }
-                    turn = 2;
                 }
             }
-
             @Override
             public void mouseEntered(MouseEvent e) {check2 = false;}
-
             @Override
             public void mouseExited(MouseEvent e) {check2 = true;}
         });
         frame.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {}
-
             @Override
             public void mousePressed(MouseEvent e) {}
-
             @Override
             public void mouseReleased(MouseEvent e) {}
-
             @Override
             public void mouseEntered(MouseEvent e) {check = false;}
-
             @Override
             public void mouseExited(MouseEvent e) {check = true;}
         });
@@ -2151,32 +2106,6 @@ public class GraphicsLab extends labyDriver {
                 } else {
                     temp = 'L';
                 }
-                T1 = new JPanel() {
-                    @Override
-                    protected void paintComponent(Graphics g) {
-                        super.paintComponent(g);
-                        g.drawImage(TP1, 0, 0, null);
-                    }
-                };
-                try {
-                    TP1 = ImageIO.read(new File(AssignTile(tile, temp, 0)));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                T1.setBounds(900, 10, 75, 75);
-                frame.add(T1);
-                label1.setText("Player Blue");
-                label1.setBounds(900,70,100,60);
-                frame.add(label1);
-            break;
-            case 'R': 
-                tile = red.checkTreasure(board.getTreasure(pX, pY));
-                temp = ' ';
-                if (tile != 0) {
-                    temp = 'T';
-                } else {
-                    temp = 'L';
-                }
                 T2 = new JPanel() {
                     @Override
                     protected void paintComponent(Graphics g) {
@@ -2189,8 +2118,34 @@ public class GraphicsLab extends labyDriver {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                T2.setBounds(1000, 10, 75, 75);
+                T2.setBounds(900, 10, 75, 75);
                 frame.add(T2);
+                label1.setText("Player Blue");
+                label1.setBounds(900,70,100,60);
+                frame.add(label1);
+            break;
+            case 'R': 
+                tile = red.checkTreasure(board.getTreasure(pX, pY));
+                temp = ' ';
+                if (tile != 0) {
+                    temp = 'T';
+                } else {
+                    temp = 'L';
+                }
+                T1 = new JPanel() {
+                    @Override
+                    protected void paintComponent(Graphics g) {
+                        super.paintComponent(g);
+                        g.drawImage(TP1, 0, 0, null);
+                    }
+                };
+                try {
+                    TP1 = ImageIO.read(new File(AssignTile(tile, temp, 0)));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                T1.setBounds(1000, 10, 75, 75);
+                frame.add(T1);
                 label1.setText("Player Red");
                 label1.setBounds(1000,70,100,60);
                 frame.add(label1);
@@ -2247,6 +2202,169 @@ public class GraphicsLab extends labyDriver {
                 label1.setBounds(1000,200,100,60);
                 frame.add(label1);
             break;
+        }
+    }
+
+    public void comTurn(){
+        boolean ai1 = (com1 != 0 && turn == 1);
+        boolean ai2 = (com2 != 0 && turn == 2);
+        boolean ai3 = (com3 != 0 && turn == 3);
+        boolean ai4 = (com4 != 0 && turn == 4);
+        int lastPos = lastTile + (lastDir - 1) * 3;
+        int move = 0;
+        int revolve = 0;
+        if(ai1){
+            switch(com1)
+            {
+                case 1:{
+                    revolve = computer1.rotate();
+                    while(revolve > 0){
+                        rotateRight();
+                        revolve--;
+                    }
+                    tileSlide(computer1.tile(lastPos));
+                    move = computer1.move(red.getpos(), board, red.getTreasure());
+                }
+                case 2:{
+                    revolve = computer2.rotate();
+                    while(revolve > 0){
+                        rotateRight();
+                        revolve--;
+                    }
+                    tileSlide(computer2.tile(lastPos));
+                    move = computer2.move(red.getpos(), board, red.getTreasure());
+                }
+            }
+            red.setPos(move);
+            pX = red.getX();
+            pY = red.getY();
+            Player1.setBounds(pX*75 +125 , pY * 75 +120, 35, 50);
+            ChangeP('R');
+            frame.repaint();
+            if(red.checkTreasure(board.getTreasure(pX, pY)) == 0) {
+                JOptionPane.showMessageDialog(null, "Red Player Won!");
+                System.exit(1);
+            }
+            turn = 2;
+        }
+        if(ai2){
+            switch(com2)
+            {
+                case 1:{
+                    revolve = computer1.rotate();
+                    while(revolve > 0){
+                        rotateRight();
+                        revolve--;
+                    }
+                    tileSlide(computer1.tile(lastPos));
+                    move = computer1.move(blue.getpos(), board, blue.getTreasure());
+                }
+                case 2:{
+                    revolve = computer2.rotate();
+                    while(revolve > 0){
+                        rotateRight();
+                        revolve--;
+                    }
+                    tileSlide(computer2.tile(lastPos));
+                    move = computer2.move(blue.getpos(), board, blue.getTreasure());
+                }
+            }
+            blue.setPos(move);
+            pX = blue.getX();
+            pY = blue.getY();
+            Player2.setBounds(pX*75 +125 , pY * 75 +120, 35, 50);
+            ChangeP('B');
+            frame.repaint();
+            if(blue.checkTreasure(board.getTreasure(pX, pY)) == 0) {
+                JOptionPane.showMessageDialog(null, "Blue Player Won!");
+                System.exit(1);
+            }
+            turn = 3;
+        }
+        if(ai3){
+            switch(com3)
+            {
+                case 1:{
+                    revolve = computer1.rotate();
+                    while(revolve > 0){
+                        rotateRight();
+                        revolve--;
+                    }
+                    tileSlide(computer1.tile(lastPos));
+                    move = computer1.move(green.getpos(), board, green.getTreasure());
+                }
+                case 2:{
+                    revolve = computer2.rotate();
+                    while(revolve > 0){
+                        rotateRight();
+                        revolve--;
+                    }
+                    tileSlide(computer2.tile(lastPos));
+                    move = computer2.move(green.getpos(), board, green.getTreasure());
+                }
+            }
+            green.setPos(move);
+            pX = green.getX();
+            pY = green.getY();
+            Player3.setBounds(pX*75 +125 , pY * 75 +120, 35, 50);
+            ChangeP('G');
+            frame.repaint();
+            if(red.checkTreasure(board.getTreasure(pX, pY)) == 0) {
+                JOptionPane.showMessageDialog(null, "Green Player Won!");
+                System.exit(1);
+            }
+            turn = 4;
+        }
+        if(ai4){
+            switch(com4)
+            {
+                case 1:{
+                    revolve = computer1.rotate();
+                    while(revolve > 0){
+                        rotateRight();
+                        revolve--;
+                    }
+                    tileSlide(computer1.tile(lastPos));
+                    move = computer1.move(yellow.getpos(), board, yellow.getTreasure());
+                }
+                case 2:{
+                    revolve = computer2.rotate();
+                    while(revolve > 0){
+                        rotateRight();
+                        revolve--;
+                    }
+                    tileSlide(computer2.tile(lastPos));
+                    move = computer2.move(yellow.getpos(), board, yellow.getTreasure());
+                }
+            }
+            yellow.setPos(move);
+            pX = yellow.getX();
+            pY = yellow.getY();
+            Player4.setBounds(pX*75+125 , pY*75 +120, 35, 50);
+            ChangeP('Y');
+            frame.repaint();
+            if(yellow.checkTreasure(board.getTreasure(pX, pY)) == 0) {
+                JOptionPane.showMessageDialog(null, "Yellow Player Won!");
+                System.exit(1);
+            }
+            turn = 2;
+        }
+    }
+
+    private void tileSlide(int pos){
+        switch(pos){
+            case 1: moveDown(1); break;
+            case 2: moveDown(3); break;
+            case 3: moveDown(5); break;
+            case 4: moveLeft(1); break;
+            case 5: moveLeft(3); break;
+            case 6: moveLeft(5); break;
+            case 7: moveUp(5); break;
+            case 8: moveUp(3); break;
+            case 9: moveUp(1); break;
+            case 10: moveRight(5); break;
+            case 11: moveRight(3); break;
+            case 12: moveRight(1); break;
         }
     }
 }

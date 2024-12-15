@@ -66,7 +66,6 @@ public class Tile{
                 connection[2] = con[3];
                 connection[3] = con[0];
                 break;
-            
         }
     return;
     }
@@ -107,8 +106,8 @@ public class Tile{
     //return treasure ID
     public String getImage(){
         String out = imageName + rotation + ".jpg";
-        if(type == 'i' && rotation > 90)
-            out = imageName + (rotation - 180) + ".jpg";
+        if(type == 'i')
+            out = imageName + (rotation % 180) + ".jpg";
         return out;
     }
 }

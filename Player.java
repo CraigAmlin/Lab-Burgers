@@ -102,6 +102,10 @@ public class Player {
         return pos;
     }
 
+    public int getTreasure(){
+        return Treasure[index];
+    }
+
     public void setX(int newX){
         X = newX;
         return;
